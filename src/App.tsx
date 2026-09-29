@@ -1,11 +1,7 @@
+import AppRouter from "./app/router/AppRouter";
+
 function App() {
-  return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">
-        Smart Inventory System
-      </h1>
-    </main>
-  );
+  return <AppRouter />;
 }
 
 export default App;
