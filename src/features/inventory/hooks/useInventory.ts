@@ -1,41 +1,34 @@
 import { useEffect, useState } from "react";
-import { getProducts } from "../services/productService";
-import { getCategories } from "../services/categoryService";
-import type { Category, Product } from "../types/product";
+import { getInventoryItems } from "../services/inventoryService";
+import type { InventoryItem } from "../types/inventory";
 
-type UseProductsResult = {
-  products: Product[];
-  categories: Category[];
+type UseInventoryResult = {
+  items: InventoryItem[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 };
 
-export function useProducts(): UseProductsResult {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+export function useInventory(): UseInventoryResult {
+  const [items, setItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadProducts() {
+    async function loadInventory() {
       try {
-        const [productsData, categoriesData] = await Promise.all([
-          getProducts(),
-          getCategories(),
-        ]);
+        const data = await getInventoryItems();
 
         if (!isMounted) {
           return;
         }
 
-        setProducts(productsData);
-        setCategories(categoriesData);
+        setItems(data);
         setError(null);
       } catch (error) {
-        console.error("useProducts error:", error);
+        console.error("useInventory error:", error);
 
         if (!isMounted) {
           return;
@@ -57,7 +50,7 @@ export function useProducts(): UseProductsResult {
       }
     }
 
-    void loadProducts();
+    void loadInventory();
 
     return () => {
       isMounted = false;
@@ -69,15 +62,11 @@ export function useProducts(): UseProductsResult {
     setError(null);
 
     try {
-      const [productsData, categoriesData] = await Promise.all([
-        getProducts(),
-        getCategories(),
-      ]);
+      const data = await getInventoryItems();
 
-      setProducts(productsData);
-      setCategories(categoriesData);
+      setItems(data);
     } catch (error) {
-      console.error("useProducts refetch error:", error);
+      console.error("useInventory refetch error:", error);
 
       if (error instanceof Error) {
         setError(error);
@@ -94,8 +83,7 @@ export function useProducts(): UseProductsResult {
   }
 
   return {
-    products,
-    categories,
+    items,
     isLoading,
     error,
     refetch,

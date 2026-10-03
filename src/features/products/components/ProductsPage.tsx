@@ -10,10 +10,6 @@ function ProductsPage() {
   const [selectedProduct, setSelectedProduct] =
     useState<Product | null>(null);
 
-  const [deleteError, setDeleteError] = useState<string | null>(
-    null,
-  );
-
   const {
     products,
     categories,
@@ -24,13 +20,11 @@ function ProductsPage() {
 
   function handleAddProduct() {
     setSelectedProduct(null);
-    setDeleteError(null);
     setIsFormOpen(true);
   }
 
   function handleEditProduct(product: Product) {
     setSelectedProduct(product);
-    setDeleteError(null);
     setIsFormOpen(true);
   }
 
@@ -45,42 +39,8 @@ function ProductsPage() {
   }
 
   async function handleDeleteProduct(productId: string) {
-    setDeleteError(null);
-
-    try {
-      await deleteProduct(productId);
-      await refetch();
-    } catch (error) {
-      console.error("deleteProduct error:", error);
-
-      if (error && typeof error === "object") {
-        const supabaseError = error as {
-          message?: string;
-          details?: string;
-          hint?: string;
-          code?: string;
-        };
-
-        const message = [
-          supabaseError.message,
-          supabaseError.details,
-          supabaseError.hint,
-          supabaseError.code
-            ? `Code: ${supabaseError.code}`
-            : undefined,
-        ]
-          .filter(Boolean)
-          .join(" — ");
-
-        setDeleteError(
-          message || "Failed to delete product.",
-        );
-      } else {
-        setDeleteError("Failed to delete product.");
-      }
-
-      throw error;
-    }
+    await deleteProduct(productId);
+    await refetch();
   }
 
   if (isLoading) {
@@ -133,7 +93,6 @@ function ProductsPage() {
 
   return (
     <section>
-      {/* Page Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
@@ -148,50 +107,25 @@ function ProductsPage() {
         <button
           type="button"
           onClick={handleAddProduct}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
         >
           Add Product
         </button>
       </div>
 
-      {/* Delete Error */}
-      {deleteError && (
-        <div
-          role="alert"
-          className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-        >
-          <p className="font-medium">
-            Failed to delete product.
-          </p>
-
-          <p className="mt-1">
-            {deleteError}
-          </p>
-        </div>
-      )}
-
-      {/* Add/Edit Form */}
       {isFormOpen && (
         <div className="mb-6 rounded-lg border border-slate-200 bg-white p-6">
           <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">
-                {selectedProduct
-                  ? "Edit Product"
-                  : "Add Product"}
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                {selectedProduct
-                  ? "Update the product information below."
-                  : "Enter the product information below."}
-              </p>
-            </div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              {selectedProduct
+                ? "Edit Product"
+                : "Add Product"}
+            </h2>
 
             <button
               type="button"
               onClick={handleCloseForm}
-              className="rounded-md px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              className="text-sm text-slate-500 hover:text-slate-900"
             >
               Cancel
             </button>
@@ -206,7 +140,6 @@ function ProductsPage() {
         </div>
       )}
 
-      {/* Product List */}
       <ProductList
         products={products}
         categories={categories}

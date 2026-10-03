@@ -1,5 +1,5 @@
 import { supabase } from "../../../lib/supabase";
-import type { Category, Product } from "../types/product";
+import type { Product } from "../types/product";
 
 type CreateProductInput = {
   name: string;
@@ -29,21 +29,11 @@ export async function getProducts(): Promise<Product[]> {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("getProducts Supabase error:", error);
-    throw error;
-  }
+    console.error(
+      "getProducts Supabase error:",
+      error,
+    );
 
-  return data ?? [];
-}
-
-export async function getCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("name", { ascending: true });
-
-  if (error) {
-    console.error("getCategories Supabase error:", error);
     throw error;
   }
 
@@ -68,7 +58,11 @@ export async function createProduct(
     .single();
 
   if (error) {
-    console.error("createProduct Supabase error:", error);
+    console.error(
+      "createProduct Supabase error:",
+      error,
+    );
+
     throw error;
   }
 
@@ -94,12 +88,17 @@ export async function updateProduct(
     .single();
 
   if (error) {
-    console.error("updateProduct Supabase error:", error);
+    console.error(
+      "updateProduct Supabase error:",
+      error,
+    );
+
     throw error;
   }
 
   return data;
 }
+
 export async function deleteProduct(
   id: string,
 ): Promise<void> {
@@ -109,7 +108,11 @@ export async function deleteProduct(
     .eq("id", id);
 
   if (error) {
-    console.error("deleteProduct Supabase error:", error);
+    console.error(
+      "deleteProduct Supabase error:",
+      error,
+    );
+
     throw error;
   }
 }

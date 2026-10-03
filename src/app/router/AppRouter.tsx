@@ -11,7 +11,31 @@ import ProtectedRoute from "./ProtectedRoute";
 import LoginForm from "../../features/auth/components/LoginForm";
 
 const ProductsPage = lazy(
-  () => import("../../features/products/components/ProductsPage"),
+  () =>
+    import(
+      "../../features/products/components/ProductsPage"
+    ),
+);
+
+const CategoriesPage = lazy(
+  () =>
+    import(
+      "../../features/products/components/CategoriesPage"
+    ),
+);
+
+const InventoryPage = lazy(
+  () =>
+    import(
+      "../../features/inventory/components/InventoryPage"
+    ),
+);
+
+const SalesPage = lazy(
+  () =>
+    import(
+      "../../features/sales/components/SalesPage"
+    ),
 );
 
 function LoginPage() {
@@ -26,14 +50,6 @@ function DashboardPage() {
   return <h1>Dashboard</h1>;
 }
 
-function InventoryPage() {
-  return <h1>Inventory</h1>;
-}
-
-function SalesPage() {
-  return <h1>Sales</h1>;
-}
-
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -45,20 +61,51 @@ function AppRouter() {
         }
       >
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          {/* Public */}
+          <Route
+            path="/login"
+            element={<LoginPage />}
+          />
 
+          {/* Protected */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/inventory" element={<InventoryPage />} />
-              <Route path="/sales" element={<SalesPage />} />
+              <Route
+                path="/dashboard"
+                element={<DashboardPage />}
+              />
+
+              <Route
+                path="/products"
+                element={<ProductsPage />}
+              />
+
+              <Route
+                path="/categories"
+                element={<CategoriesPage />}
+              />
+
+              <Route
+                path="/inventory"
+                element={<InventoryPage />}
+              />
+
+              <Route
+                path="/sales"
+                element={<SalesPage />}
+              />
             </Route>
           </Route>
 
+          {/* Unknown route */}
           <Route
             path="*"
-            element={<Navigate to="/dashboard" replace />}
+            element={
+              <Navigate
+                to="/dashboard"
+                replace
+              />
+            }
           />
         </Routes>
       </Suspense>
