@@ -10,6 +10,12 @@ import AppLayout from "../../components/layout/AppLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import LoginForm from "../../features/auth/components/LoginForm";
 
+/*
+ * -------------------------------------------------------
+ * Lazy-loaded pages
+ * -------------------------------------------------------
+ */
+
 const DashboardPage = lazy(
   () =>
     import(
@@ -45,6 +51,12 @@ const SalesPage = lazy(
     ),
 );
 
+/*
+ * -------------------------------------------------------
+ * Login page
+ * -------------------------------------------------------
+ */
+
 function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
@@ -53,54 +65,78 @@ function LoginPage() {
   );
 }
 
+/*
+ * -------------------------------------------------------
+ * App Router
+ * -------------------------------------------------------
+ */
+
 function AppRouter() {
   return (
     <BrowserRouter>
       <Suspense
         fallback={
-          <main className="flex min-h-screen items-center justify-center">
-            <p>Loading page...</p>
+          <main className="flex min-h-screen items-center justify-center bg-slate-50">
+            <p className="text-sm text-slate-600">
+              Loading page...
+            </p>
           </main>
         }
       >
         <Routes>
-          {/* Public routes */}
+          {/* =================================================
+              Public Routes
+              ================================================= */}
+
           <Route
             path="/login"
             element={<LoginPage />}
           />
 
-          {/* Protected routes */}
+          {/* =================================================
+              Protected Routes
+              ================================================= */}
+
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
+
+              {/* Dashboard */}
               <Route
                 path="/dashboard"
                 element={<DashboardPage />}
               />
 
+              {/* Products */}
               <Route
                 path="/products"
                 element={<ProductsPage />}
               />
 
+              {/* Categories */}
               <Route
                 path="/categories"
                 element={<CategoriesPage />}
               />
 
+              {/* Inventory */}
               <Route
                 path="/inventory"
                 element={<InventoryPage />}
               />
 
+              {/* Sales */}
               <Route
                 path="/sales"
                 element={<SalesPage />}
               />
+
             </Route>
           </Route>
 
-          {/* Unknown route */}
+          {/* =================================================
+              Unknown Routes
+              ================================================= */}
+
           <Route
             path="*"
             element={

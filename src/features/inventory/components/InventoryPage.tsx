@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 
 import { useInventory } from "../hooks/useInventory";
 import { updateStock } from "../services/inventoryService";
-import {
-  getStockMovements,
-  type StockMovement,
-} from "../services/stockMovementService";
+
 import type { InventoryItem } from "../types/inventory";
 
 function InventoryPage() {
+  const [searchParams, setSearchParams] =
+    useSearchParams();
+
   const {
     items,
     isLoading,
@@ -16,108 +17,53 @@ function InventoryPage() {
     refetch,
   } = useInventory();
 
-  const [movements, setMovements] = useState<
-    StockMovement[]
-  >([]);
-
-  const [isLoadingMovements, setIsLoadingMovements] =
-    useState(true);
-
-  const [movementError, setMovementError] =
-    useState<string | null>(null);
-
   const [selectedItem, setSelectedItem] =
     useState<InventoryItem | null>(null);
 
   const [adjustmentType, setAdjustmentType] =
     useState<"add" | "remove">("add");
 
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] =
+    useState("");
 
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] =
+    useState(false);
 
   const [saveError, setSaveError] =
     useState<string | null>(null);
 
   /*
-   * Initial stock movement loading.
+   * -------------------------------------------------------
+   * Product selected from Dashboard
+   * -------------------------------------------------------
    *
-   * We don't call setIsLoadingMovements(true) here
-   * because the initial state is already true.
+   * Example:
+   *
+   * /inventory?productId=abc-123
+   *
+   * We do NOT use useEffect here.
+   * The active product is derived directly from the URL.
    */
-  useEffect(() => {
-    let isMounted = true;
 
-    async function loadInitialMovements() {
-      try {
-        const data = await getStockMovements();
+  const productId =
+    searchParams.get("productId");
 
-        if (!isMounted) {
-          return;
-        }
-
-        setMovements(data);
-        setMovementError(null);
-      } catch (error) {
-        if (!isMounted) {
-          return;
-        }
-
-        console.error(
-          "loadInitialMovements error:",
-          error,
-        );
-
-        if (error instanceof Error) {
-          setMovementError(error.message);
-        } else {
-          setMovementError(
-            "Failed to load stock movement history.",
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingMovements(false);
-        }
-      }
-    }
-
-    void loadInitialMovements();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const productFromUrl =
+    productId
+      ? items.find(
+          (item) => item.id === productId,
+        ) ?? null
+      : null;
 
   /*
-   * Used when manually refreshing the movement history
-   * or after changing stock.
+   * If the user clicked Adjust Stock directly
+   * inside Inventory, selectedItem is used.
+   *
+   * If the user came from Dashboard, productFromUrl
+   * is used.
    */
-  async function loadMovements() {
-    setIsLoadingMovements(true);
-    setMovementError(null);
-
-    try {
-      const data = await getStockMovements();
-
-      setMovements(data);
-    } catch (error) {
-      console.error(
-        "loadMovements error:",
-        error,
-      );
-
-      if (error instanceof Error) {
-        setMovementError(error.message);
-      } else {
-        setMovementError(
-          "Failed to load stock movement history.",
-        );
-      }
-    } finally {
-      setIsLoadingMovements(false);
-    }
-  }
+  const activeItem =
+    selectedItem ?? productFromUrl;
 
   function getStockStatus(
     stockQuantity: number,
@@ -146,16 +92,39 @@ function InventoryPage() {
     };
   }
 
-  function formatDate(date: string) {
-    return new Date(date).toLocaleString();
-  }
+  /*
+   * -------------------------------------------------------
+   * Open adjustment
+   * -------------------------------------------------------
+   */
 
-  function openAdjustment(item: InventoryItem) {
+  function openAdjustment(
+    item: InventoryItem,
+  ) {
     setSelectedItem(item);
     setAdjustmentType("add");
     setQuantity("");
     setSaveError(null);
+
+    /*
+     * Keep the selected product in the URL.
+     *
+     * This means:
+     *
+     * /inventory?productId=abc-123
+     *
+     * represents the product currently being adjusted.
+     */
+    setSearchParams({
+      productId: item.id,
+    });
   }
+
+  /*
+   * -------------------------------------------------------
+   * Close adjustment
+   * -------------------------------------------------------
+   */
 
   function closeAdjustment() {
     if (isSaving) {
@@ -165,14 +134,26 @@ function InventoryPage() {
     setSelectedItem(null);
     setQuantity("");
     setSaveError(null);
+
+    /*
+     * Remove the product from the URL.
+     */
+    setSearchParams({});
   }
 
+  /*
+   * -------------------------------------------------------
+   * Save stock adjustment
+   * -------------------------------------------------------
+   */
+
   async function handleSaveAdjustment() {
-    if (!selectedItem) {
+    if (!activeItem) {
       return;
     }
 
-    const parsedQuantity = Number(quantity);
+    const parsedQuantity =
+      Number(quantity);
 
     if (
       !Number.isInteger(parsedQuantity) ||
@@ -189,10 +170,12 @@ function InventoryPage() {
 
     if (adjustmentType === "add") {
       newQuantity =
-        selectedItem.stock_quantity + parsedQuantity;
+        activeItem.stock_quantity +
+        parsedQuantity;
     } else {
       newQuantity =
-        selectedItem.stock_quantity - parsedQuantity;
+        activeItem.stock_quantity -
+        parsedQuantity;
     }
 
     if (newQuantity < 0) {
@@ -208,17 +191,28 @@ function InventoryPage() {
 
     try {
       await updateStock(
-        selectedItem.id,
+        activeItem.id,
         newQuantity,
         adjustmentType,
         parsedQuantity,
       );
 
+      /*
+       * Close the adjustment form.
+       */
       setSelectedItem(null);
       setQuantity("");
 
+      /*
+       * Remove productId from URL.
+       */
+      setSearchParams({});
+
+      /*
+       * Reload inventory so the new stock
+       * quantity appears immediately.
+       */
       await refetch();
-      await loadMovements();
     } catch (error) {
       console.error(
         "handleSaveAdjustment error:",
@@ -237,6 +231,12 @@ function InventoryPage() {
     }
   }
 
+  /*
+   * -------------------------------------------------------
+   * Loading
+   * -------------------------------------------------------
+   */
+
   if (isLoading) {
     return (
       <section>
@@ -253,6 +253,12 @@ function InventoryPage() {
       </section>
     );
   }
+
+  /*
+   * -------------------------------------------------------
+   * Error
+   * -------------------------------------------------------
+   */
 
   if (error) {
     return (
@@ -275,7 +281,9 @@ function InventoryPage() {
 
           <button
             type="button"
-            onClick={() => void refetch()}
+            onClick={() =>
+              void refetch()
+            }
             className="mt-3 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
           >
             Try again
@@ -285,6 +293,12 @@ function InventoryPage() {
     );
   }
 
+  /*
+   * -------------------------------------------------------
+   * Page
+   * -------------------------------------------------------
+   */
+
   return (
     <section>
       <div className="mb-6">
@@ -293,9 +307,16 @@ function InventoryPage() {
         </h1>
 
         <p className="mt-1 text-slate-600">
-          Monitor and adjust your current stock levels.
+          Monitor and adjust your current
+          stock levels.
         </p>
       </div>
+
+      {/*
+       * ---------------------------------------------------
+       * Save error
+       * ---------------------------------------------------
+       */}
 
       {saveError && (
         <div
@@ -306,7 +327,13 @@ function InventoryPage() {
         </div>
       )}
 
-      {selectedItem && (
+      {/*
+       * ---------------------------------------------------
+       * Adjustment form
+       * ---------------------------------------------------
+       */}
+
+      {activeItem && (
         <div className="mb-6 rounded-lg border border-slate-200 bg-white p-6">
           <h2 className="text-lg font-semibold text-slate-900">
             Adjust Stock
@@ -315,16 +342,20 @@ function InventoryPage() {
           <p className="mt-1 text-sm text-slate-600">
             Product:{" "}
             <span className="font-medium text-slate-900">
-              {selectedItem.name}
+              {activeItem.name}
             </span>
           </p>
 
           <p className="mt-1 text-sm text-slate-600">
             Current stock:{" "}
             <span className="font-medium text-slate-900">
-              {selectedItem.stock_quantity}
+              {activeItem.stock_quantity}
             </span>
           </p>
+
+          {/*
+           * Adjustment type
+           */}
 
           <div className="mt-4">
             <fieldset>
@@ -339,10 +370,13 @@ function InventoryPage() {
                     name="adjustment-type"
                     value="add"
                     checked={
-                      adjustmentType === "add"
+                      adjustmentType ===
+                      "add"
                     }
                     onChange={() =>
-                      setAdjustmentType("add")
+                      setAdjustmentType(
+                        "add",
+                      )
                     }
                     disabled={isSaving}
                   />
@@ -356,10 +390,13 @@ function InventoryPage() {
                     name="adjustment-type"
                     value="remove"
                     checked={
-                      adjustmentType === "remove"
+                      adjustmentType ===
+                      "remove"
                     }
                     onChange={() =>
-                      setAdjustmentType("remove")
+                      setAdjustmentType(
+                        "remove",
+                      )
                     }
                     disabled={isSaving}
                   />
@@ -369,6 +406,10 @@ function InventoryPage() {
               </div>
             </fieldset>
           </div>
+
+          {/*
+           * Quantity
+           */}
 
           <div className="mt-4">
             <label
@@ -385,13 +426,19 @@ function InventoryPage() {
               step="1"
               value={quantity}
               onChange={(event) =>
-                setQuantity(event.target.value)
+                setQuantity(
+                  event.target.value,
+                )
               }
               disabled={isSaving}
               className="mt-1 block w-full max-w-xs rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100"
               placeholder="Enter quantity"
             />
           </div>
+
+          {/*
+           * Buttons
+           */}
 
           <div className="mt-5 flex gap-2">
             <button
@@ -409,7 +456,9 @@ function InventoryPage() {
 
             <button
               type="button"
-              onClick={closeAdjustment}
+              onClick={
+                closeAdjustment
+              }
               disabled={isSaving}
               className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -419,7 +468,12 @@ function InventoryPage() {
         </div>
       )}
 
-      {/* Current Inventory */}
+      {/*
+       * ---------------------------------------------------
+       * Inventory table
+       * ---------------------------------------------------
+       */}
+
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200">
@@ -449,10 +503,11 @@ function InventoryPage() {
 
             <tbody className="divide-y divide-slate-200">
               {items.map((item) => {
-                const status = getStockStatus(
-                  item.stock_quantity,
-                  item.minimum_stock,
-                );
+                const status =
+                  getStockStatus(
+                    item.stock_quantity,
+                    item.minimum_stock,
+                  );
 
                 return (
                   <tr key={item.id}>
@@ -480,7 +535,9 @@ function InventoryPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          openAdjustment(item)
+                          openAdjustment(
+                            item,
+                          )
                         }
                         className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
                       >
@@ -499,127 +556,6 @@ function InventoryPage() {
             No inventory items found.
           </div>
         )}
-      </div>
-
-      {/* Stock Movement History */}
-      <div className="mt-8">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold text-slate-900">
-            Stock Movement History
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-600">
-            Track when stock was added or removed.
-          </p>
-        </div>
-
-        {isLoadingMovements && (
-          <div className="rounded-lg border border-slate-200 bg-white p-6">
-            <p
-              className="text-sm text-slate-600"
-              aria-live="polite"
-            >
-              Loading stock history...
-            </p>
-          </div>
-        )}
-
-        {movementError && (
-          <div
-            role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-          >
-            <p>
-              Failed to load stock movement history.
-            </p>
-
-            <p className="mt-1">
-              {movementError}
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                void loadMovements()
-              }
-              className="mt-3 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {!isLoadingMovements &&
-          !movementError && (
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                        Product
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                        Action
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                        Quantity
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                        Date
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-slate-200">
-                    {movements.map((movement) => (
-                      <tr key={movement.id}>
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                          {movement.product?.name ??
-                            "Unknown Product"}
-                        </td>
-
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                              movement.movement_type ===
-                              "add"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {movement.movement_type ===
-                            "add"
-                              ? "Added"
-                              : "Removed"}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 text-sm text-slate-700">
-                          {movement.quantity}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {formatDate(
-                            movement.created_at,
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {movements.length === 0 && (
-                <div className="p-6 text-center text-sm text-slate-500">
-                  No stock movements yet.
-                </div>
-              )}
-            </div>
-          )}
       </div>
     </section>
   );
