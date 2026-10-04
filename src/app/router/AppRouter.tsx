@@ -10,6 +10,13 @@ import AppLayout from "../../components/layout/AppLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import LoginForm from "../../features/auth/components/LoginForm";
 
+const DashboardPage = lazy(
+  () =>
+    import(
+      "../../features/dashboard/components/DashboardPage"
+    ),
+);
+
 const ProductsPage = lazy(
   () =>
     import(
@@ -46,10 +53,6 @@ function LoginPage() {
   );
 }
 
-function DashboardPage() {
-  return <h1>Dashboard</h1>;
-}
-
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -61,13 +64,13 @@ function AppRouter() {
         }
       >
         <Routes>
-          {/* Public */}
+          {/* Public routes */}
           <Route
             path="/login"
             element={<LoginPage />}
           />
 
-          {/* Protected */}
+          {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route
