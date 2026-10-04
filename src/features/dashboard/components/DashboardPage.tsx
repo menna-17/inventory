@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
-
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
-import { updateStock } from "../../inventory/services/inventoryService";
 
 type RecentSale = {
   id: string;
@@ -27,45 +25,29 @@ type DashboardStats = {
 };
 
 function DashboardPage() {
-  const [stats, setStats] =
-    useState<DashboardStats>({
-      totalProducts: 0,
-      totalStock: 0,
-      totalSales: 0,
-      salesToday: 0,
-    });
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    totalStock: 0,
+    totalSales: 0,
+    salesToday: 0,
+  });
 
-  const [recentSales, setRecentSales] =
-    useState<RecentSale[]>([]);
+  const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<
+    LowStockProduct[]
+  >([]);
 
-  const [lowStockProducts, setLowStockProducts] =
-    useState<LowStockProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
-
-  const [stockProductId, setStockProductId] =
-    useState<string | null>(null);
-
-  const [stockQuantity, setStockQuantity] =
-    useState("");
-
-  const [stockLoading, setStockLoading] =
-    useState(false);
-
-  const [stockError, setStockError] =
-    useState("");
-
-  async function loadDashboard() {
+  const loadDashboard = useCallback(async () => {
     try {
       setError("");
 
       const [
-        productsResult,
-        salesResult,
+        { data: products, error: productsError },
+        { data: sales, error: salesError },
       ] = await Promise.all([
         supabase
           .from("products")
@@ -83,46 +65,40 @@ function DashboardPage() {
           }),
       ]);
 
-      if (productsResult.error) {
-        throw productsResult.error;
+      if (productsError) {
+        throw productsError;
       }
 
-      if (salesResult.error) {
-        throw salesResult.error;
+      if (salesError) {
+        throw salesError;
       }
 
-      const products =
-        productsResult.data ?? [];
-
-      const sales =
-        salesResult.data ?? [];
+      const productRows = products ?? [];
+      const salesRows = sales ?? [];
 
       // ---------------------------------------------
       // Statistics
       // ---------------------------------------------
 
-      const totalProducts =
-        products.length;
+      const totalProducts = productRows.length;
 
-      const totalStock =
-        products.reduce(
-          (total, product) =>
-            total +
-            Number(
-              product.stock_quantity ?? 0,
-            ),
-          0,
-        );
+      const totalStock = productRows.reduce(
+        (total, product) =>
+          total +
+          Number(product.stock_quantity ?? 0),
+        0,
+      );
 
-      const totalSales =
-        sales.reduce(
-          (total, sale) =>
-            total +
-            Number(
-              sale.total_amount ?? 0,
-            ),
-          0,
-        );
+      const totalSales = salesRows.reduce(
+        (total, sale) =>
+          total +
+          Number(sale.total_amount ?? 0),
+        0,
+      );
+
+      // ---------------------------------------------
+      // Sales today
+      // ---------------------------------------------
 
       const today = new Date();
 
@@ -132,87 +108,70 @@ function DashboardPage() {
         today.getDate(),
       );
 
-      const salesToday =
-        sales.reduce(
-          (total, sale) => {
-            const saleDate =
-              new Date(
-                sale.created_at,
-              );
+      const salesToday = salesRows.reduce(
+        (total, sale) => {
+          const saleDate = new Date(
+            sale.created_at,
+          );
 
-            if (
-              saleDate >=
-              startOfToday
-            ) {
-              return (
-                total +
-                Number(
-                  sale.total_amount ??
-                    0,
-                )
-              );
-            }
+          if (saleDate >= startOfToday) {
+            return (
+              total +
+              Number(
+                sale.total_amount ?? 0,
+              )
+            );
+          }
 
-            return total;
-          },
-          0,
-        );
+          return total;
+        },
+        0,
+      );
 
       // ---------------------------------------------
       // Low stock
       // ---------------------------------------------
 
-      const lowStock =
-        products
-          .filter(
-            (product) =>
-              Number(
-                product.stock_quantity ??
-                  0,
-              ) <=
-              Number(
-                product.minimum_stock ??
-                  0,
-              ),
-          )
-          .map((product) => ({
-            id: product.id,
-            name: product.name,
-            stock_quantity: Number(
-              product.stock_quantity ??
-                0,
+      const lowStock = productRows
+        .filter(
+          (product) =>
+            Number(
+              product.stock_quantity ?? 0,
+            ) <=
+            Number(
+              product.minimum_stock ?? 0,
             ),
-            minimum_stock: Number(
-              product.minimum_stock ??
-                0,
-            ),
-          }))
-          .sort(
-            (a, b) =>
-              a.stock_quantity -
-              b.stock_quantity,
-          );
+        )
+        .map((product) => ({
+          id: product.id,
+          name: product.name,
+          stock_quantity: Number(
+            product.stock_quantity ?? 0,
+          ),
+          minimum_stock: Number(
+            product.minimum_stock ?? 0,
+          ),
+        }))
+        .sort(
+          (a, b) =>
+            a.stock_quantity -
+            b.stock_quantity,
+        );
 
       // ---------------------------------------------
       // Recent sales
       // ---------------------------------------------
 
-      const recentSaleIds =
-        sales
-          .slice(0, 5)
-          .map(
-            (sale) => sale.id,
-          );
+      const recentSaleIds = salesRows
+        .slice(0, 5)
+        .map((sale) => sale.id);
 
-      let recentSalesData: RecentSale[] =
-        [];
+      let recentSalesData: RecentSale[] = [];
 
-      if (
-        recentSaleIds.length > 0
-      ) {
+      if (recentSaleIds.length > 0) {
         const {
           data: saleItems,
-          error: itemsError,
+          error: saleItemsError,
         } = await supabase
           .from("sale_items")
           .select(
@@ -223,98 +182,75 @@ function DashboardPage() {
             recentSaleIds,
           );
 
-        if (itemsError) {
-          throw itemsError;
+        if (saleItemsError) {
+          throw saleItemsError;
         }
 
         const productIds = [
           ...new Set(
             (saleItems ?? []).map(
-              (item) =>
-                item.product_id,
+              (item) => item.product_id,
             ),
           ),
         ];
 
-        let productsData: {
+        let productNames: {
           id: string;
           name: string;
         }[] = [];
 
-        if (
-          productIds.length > 0
-        ) {
+        if (productIds.length > 0) {
           const {
             data,
-            error:
-              productNamesError,
+            error: productNamesError,
           } = await supabase
             .from("products")
             .select("id, name")
-            .in(
-              "id",
-              productIds,
-            );
+            .in("id", productIds);
 
-          if (
-            productNamesError
-          ) {
+          if (productNamesError) {
             throw productNamesError;
           }
 
-          productsData =
-            data ?? [];
+          productNames = data ?? [];
         }
 
-        recentSalesData =
-          sales
-            .slice(0, 5)
-            .flatMap(
-              (sale) => {
-                const items =
-                  (
-                    saleItems ??
-                    []
-                  ).filter(
-                    (item) =>
-                      item.sale_id ===
-                      sale.id,
-                  );
-
-                return items.map(
-                  (item) => ({
-                    id: sale.id,
-                    created_at:
-                      sale.created_at,
-                    total_amount:
-                      Number(
-                        sale.total_amount ??
-                          0,
-                      ),
-                    product_name:
-                      productsData.find(
-                        (
-                          product,
-                        ) =>
-                          product.id ===
-                          item.product_id,
-                      )?.name ??
-                      "Unknown product",
-                    quantity:
-                      Number(
-                        item.quantity ??
-                          0,
-                      ),
-                    unit_price:
-                      Number(
-                        item.unit_price ??
-                          0,
-                      ),
-                  }),
-                );
-              },
+        recentSalesData = salesRows
+          .slice(0, 5)
+          .flatMap((sale) => {
+            const items = (
+              saleItems ?? []
+            ).filter(
+              (item) =>
+                item.sale_id === sale.id,
             );
+
+            return items.map((item) => ({
+              id: sale.id,
+              created_at: sale.created_at,
+              total_amount: Number(
+                sale.total_amount ?? 0,
+              ),
+              product_name:
+                productNames.find(
+                  (product) =>
+                    product.id ===
+                    item.product_id,
+                )?.name ??
+                "Unknown product",
+              quantity: Number(
+                item.quantity ?? 0,
+              ),
+              unit_price: Number(
+                item.unit_price ?? 0,
+              ),
+            }));
+          });
       }
+
+      // ---------------------------------------------
+      // Update state
+      // ---------------------------------------------
 
       setStats({
         totalProducts,
@@ -323,125 +259,53 @@ function DashboardPage() {
         salesToday,
       });
 
-      setRecentSales(
-        recentSalesData,
-      );
-
-      setLowStockProducts(
-        lowStock,
-      );
-    } catch (loadError) {
+      setLowStockProducts(lowStock);
+      setRecentSales(recentSalesData);
+    } catch (error) {
       console.error(
         "Failed to load dashboard:",
-        loadError,
+        error,
       );
 
       setError(
         "Failed to load dashboard data.",
       );
-    } finally {
-      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      if (!mounted) {
-        return;
-      }
-
-      await loadDashboard();
-    }
-
-    load();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   // ---------------------------------------------
-  // Open increase stock form
+  // Initial load
   // ---------------------------------------------
 
-  function openIncreaseStock(
-    productId: string,
-  ) {
-    setStockProductId(productId);
-    setStockQuantity("");
-    setStockError("");
-  }
+  useEffect(() => {
+    async function loadInitialDashboard() {
+      setLoading(true);
 
-  // ---------------------------------------------
-  // Cancel increase stock
-  // ---------------------------------------------
-
-  function cancelIncreaseStock() {
-    setStockProductId(null);
-    setStockQuantity("");
-    setStockError("");
-  }
-
-  // ---------------------------------------------
-  // Increase stock
-  // ---------------------------------------------
-
-  async function handleIncreaseStock(
-    product: LowStockProduct,
-  ) {
-    const quantity =
-      Number(stockQuantity);
-
-    if (
-      !Number.isInteger(quantity) ||
-      quantity <= 0
-    ) {
-      setStockError(
-        "Please enter a whole number greater than zero.",
-      );
-
-      return;
-    }
-
-    try {
-      setStockLoading(true);
-      setStockError("");
-
-      const newQuantity =
-        product.stock_quantity +
-        quantity;
-
-      await updateStock(
-        product.id,
-        newQuantity,
-        "add",
-        quantity,
-      );
-
-      // Close form
-      setStockProductId(null);
-      setStockQuantity("");
-
-      // Reload dashboard
       await loadDashboard();
-    } catch (stockUpdateError) {
-      console.error(
-        "Failed to increase stock:",
-        stockUpdateError,
-      );
 
-      setStockError(
-        "Failed to increase stock.",
-      );
+      setLoading(false);
+    }
+
+    loadInitialDashboard();
+  }, [loadDashboard]);
+
+  // ---------------------------------------------
+  // Refresh
+  // ---------------------------------------------
+
+  async function handleRefresh() {
+    try {
+      setRefreshing(true);
+      setError("");
+
+      await loadDashboard();
     } finally {
-      setStockLoading(false);
+      setRefreshing(false);
     }
   }
 
   // ---------------------------------------------
-  // Loading
+  // Loading screen
   // ---------------------------------------------
 
   if (loading) {
@@ -461,15 +325,27 @@ function DashboardPage() {
   return (
     <section>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Dashboard
-        </h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Dashboard
+          </h1>
 
-        <p className="mt-1 text-sm text-slate-600">
-          Overview of your inventory and
-          sales.
-        </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Overview of your inventory and sales.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {refreshing
+            ? "Refreshing..."
+            : "Refresh"}
+        </button>
       </div>
 
       {/* Error */}
@@ -507,10 +383,7 @@ function DashboardPage() {
           </p>
 
           <p className="mt-2 text-3xl font-bold text-slate-900">
-            $
-            {stats.totalSales.toFixed(
-              2,
-            )}
+            ${stats.totalSales.toFixed(2)}
           </p>
         </div>
 
@@ -520,10 +393,7 @@ function DashboardPage() {
           </p>
 
           <p className="mt-2 text-3xl font-bold text-slate-900">
-            $
-            {stats.salesToday.toFixed(
-              2,
-            )}
+            ${stats.salesToday.toFixed(2)}
           </p>
         </div>
       </div>
@@ -536,17 +406,14 @@ function DashboardPage() {
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Products that have reached or
-            fallen below their minimum stock
-            level.
+            Products that have reached or fallen below their
+            minimum stock level.
           </p>
         </div>
 
-        {lowStockProducts.length ===
-        0 ? (
+        {lowStockProducts.length === 0 ? (
           <div className="px-5 py-8 text-center text-sm text-slate-500">
-            All products are sufficiently
-            stocked.
+            All products are sufficiently stocked.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -568,33 +435,23 @@ function DashboardPage() {
                   <th className="px-5 py-3 font-medium text-slate-600">
                     Status
                   </th>
-
-                  <th className="px-5 py-3 font-medium text-slate-600">
-                    Action
-                  </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y">
                 {lowStockProducts.map(
                   (product) => (
-                    <tr
-                      key={product.id}
-                    >
+                    <tr key={product.id}>
                       <td className="px-5 py-4 font-medium text-slate-900">
                         {product.name}
                       </td>
 
                       <td className="px-5 py-4 text-slate-700">
-                        {
-                          product.stock_quantity
-                        }
+                        {product.stock_quantity}
                       </td>
 
                       <td className="px-5 py-4 text-slate-700">
-                        {
-                          product.minimum_stock
-                        }
+                        {product.minimum_stock}
                       </td>
 
                       <td className="px-5 py-4">
@@ -607,83 +464,6 @@ function DashboardPage() {
                           <span className="inline-flex rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700">
                             Low Stock
                           </span>
-                        )}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        {stockProductId ===
-                        product.id ? (
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            <input
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={
-                                stockQuantity
-                              }
-                              onChange={(
-                                event,
-                              ) =>
-                                setStockQuantity(
-                                  event.target
-                                    .value,
-                                )
-                              }
-                              placeholder="Qty"
-                              className="w-24 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-300"
-                              disabled={
-                                stockLoading
-                              }
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleIncreaseStock(
-                                  product,
-                                )
-                              }
-                              disabled={
-                                stockLoading
-                              }
-                              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              {stockLoading
-                                ? "Adding..."
-                                : "Add Stock"}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={
-                                cancelIncreaseStock
-                              }
-                              disabled={
-                                stockLoading
-                              }
-                              className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-
-                            {stockError && (
-                              <p className="text-xs text-red-600">
-                                {stockError}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openIncreaseStock(
-                                product.id,
-                              )
-                            }
-                            className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                          >
-                            Increase Stock
-                          </button>
                         )}
                       </td>
                     </tr>
@@ -707,8 +487,7 @@ function DashboardPage() {
           </p>
         </div>
 
-        {recentSales.length ===
-        0 ? (
+        {recentSales.length === 0 ? (
           <div className="px-5 py-8 text-center text-sm text-slate-500">
             No sales yet.
           </div>
@@ -746,9 +525,7 @@ function DashboardPage() {
                       key={`${sale.id}-${index}`}
                     >
                       <td className="px-5 py-4 font-medium text-slate-900">
-                        {
-                          sale.product_name
-                        }
+                        {sale.product_name}
                       </td>
 
                       <td className="px-5 py-4 text-slate-700">
@@ -756,10 +533,7 @@ function DashboardPage() {
                       </td>
 
                       <td className="px-5 py-4 text-slate-700">
-                        $
-                        {sale.unit_price.toFixed(
-                          2,
-                        )}
+                        ${sale.unit_price.toFixed(2)}
                       </td>
 
                       <td className="px-5 py-4 font-medium text-slate-900">
