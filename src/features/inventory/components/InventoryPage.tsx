@@ -3,12 +3,13 @@ import { useSearchParams } from "react-router-dom";
 
 import { useInventory } from "../hooks/useInventory";
 import { updateStock } from "../services/inventoryService";
-import {
-  getStockMovements,
-  type StockMovement,
-} from "../services/stockMovementService";
+import { getStockMovements } from "../services/stockMovementService";
 
-import type { InventoryItem } from "../types/inventory";
+import type {
+  InventoryItem,
+  StockMovement,
+  StockMovementType,
+} from "../types/inventory";
 
 import InventoryTable from "./InventoryTable";
 import StockAdjustmentModal from "./StockAdjustmentModal";
@@ -40,7 +41,7 @@ function InventoryPage() {
     useState<InventoryItem | null>(null);
 
   const [adjustmentType, setAdjustmentType] =
-    useState<"add" | "remove">("add");
+    useState<StockMovementType>("add");
 
   const [quantity, setQuantity] =
     useState("");
@@ -61,7 +62,6 @@ function InventoryPage() {
    * /inventory?productId=PRODUCT_ID
    *
    * We derive the product directly from the URL.
-   * We do NOT use useEffect to set selectedItem.
    */
 
   const productId =
@@ -183,12 +183,6 @@ function InventoryPage() {
     setQuantity("");
     setSaveError(null);
 
-    /*
-     * Store the selected product in the URL.
-     *
-     * Example:
-     * /inventory?productId=abc-123
-     */
     setSearchParams(
       {
         productId: item.id,
@@ -215,9 +209,6 @@ function InventoryPage() {
     setQuantity("");
     setSaveError(null);
 
-    /*
-     * Remove productId from URL.
-     */
     setSearchParams(
       {},
       {
@@ -243,6 +234,7 @@ function InventoryPage() {
     /*
      * Validate quantity.
      */
+
     if (
       !Number.isInteger(
         parsedQuantity,
@@ -256,32 +248,21 @@ function InventoryPage() {
       return;
     }
 
-    let newQuantity: number;
-
     /*
-     * Add stock.
+     * Validate remove quantity before
+     * sending the request.
+     *
+     * The service also performs this
+     * validation.
      */
+
     if (
-      adjustmentType === "add"
+      adjustmentType === "remove" &&
+      parsedQuantity >
+        activeItem.stock_quantity
     ) {
-      newQuantity =
-        activeItem.stock_quantity +
-        parsedQuantity;
-    } else {
-      /*
-       * Remove stock.
-       */
-      newQuantity =
-        activeItem.stock_quantity -
-        parsedQuantity;
-    }
-
-    /*
-     * Stock cannot go below zero.
-     */
-    if (newQuantity < 0) {
       setSaveError(
-        "Stock cannot be less than zero.",
+        `Not enough stock. Available stock: ${activeItem.stock_quantity}.`,
       );
 
       return;
@@ -292,12 +273,18 @@ function InventoryPage() {
 
     try {
       /*
-       * Update products.stock_quantity
-       * and create stock movement.
+       * updateStock now receives:
+       *
+       * productId
+       * movementType
+       * movementQuantity
+       *
+       * The service calculates the new
+       * stock quantity itself.
        */
+
       await updateStock(
         activeItem.id,
-        newQuantity,
         adjustmentType,
         parsedQuantity,
       );
@@ -305,13 +292,16 @@ function InventoryPage() {
       /*
        * Close adjustment.
        */
+
       setSelectedItem(null);
       setAdjustmentType("add");
       setQuantity("");
+      setSaveError(null);
 
       /*
        * Remove productId from URL.
        */
+
       setSearchParams(
         {},
         {
@@ -322,11 +312,13 @@ function InventoryPage() {
       /*
        * Refresh inventory.
        */
+
       await refetch();
 
       /*
        * Refresh movement history.
        */
+
       await loadMovements();
     } catch (error) {
       console.error(
@@ -417,6 +409,7 @@ function InventoryPage() {
   return (
     <section>
       {/* Header */}
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">
           Inventory
@@ -429,6 +422,7 @@ function InventoryPage() {
       </div>
 
       {/* Save error */}
+
       {saveError && (
         <div
           role="alert"
@@ -439,6 +433,7 @@ function InventoryPage() {
       )}
 
       {/* Stock adjustment */}
+
       {activeItem && (
         <StockAdjustmentModal
           item={activeItem}
@@ -458,12 +453,14 @@ function InventoryPage() {
       )}
 
       {/* Inventory table */}
+
       <InventoryTable
         items={items}
         onAdjustStock={openAdjustment}
       />
 
       {/* Movement history */}
+
       <StockMovementHistory
         movements={movements}
         isLoading={isLoadingMovements}

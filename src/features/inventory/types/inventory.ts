@@ -15,3 +15,18 @@ export type InventoryStatus =
   | "in_stock"
   | "low_stock"
   | "out_of_stock";
+
+export type StockMovementType =
+  | "add"
+  | "remove";
+
+export type StockMovement = {
+  id: string;
+  product_id: string;
+  movement_type: StockMovementType;
+  quantity: number;
+  created_at: string;
+  product?: {
+    name: string;
+  };
+};

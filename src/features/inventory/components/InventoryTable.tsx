@@ -2,9 +2,7 @@ import type { InventoryItem } from "../types/inventory";
 
 type InventoryTableProps = {
   items: InventoryItem[];
-  onAdjustStock: (
-    item: InventoryItem,
-  ) => void;
+  onAdjustStock: (item: InventoryItem) => void;
 };
 
 function getStockStatus(
@@ -19,9 +17,7 @@ function getStockStatus(
     };
   }
 
-  if (
-    stockQuantity <= minimumStock
-  ) {
+  if (stockQuantity <= minimumStock) {
     return {
       label: "Low Stock",
       className:
@@ -70,30 +66,25 @@ function InventoryTable({
 
           <tbody className="divide-y divide-slate-200">
             {items.map((item) => {
-              const status =
-                getStockStatus(
-                  item.stock_quantity,
-                  item.minimum_stock,
-                );
+              const status = getStockStatus(
+                item.stock_quantity,
+                item.minimum_stock,
+              );
 
               return (
                 <tr key={item.id}>
-                  {/* Product */}
                   <td className="px-6 py-4 text-sm font-medium text-slate-900">
                     {item.name}
                   </td>
 
-                  {/* Stock */}
                   <td className="px-6 py-4 text-sm text-slate-700">
                     {item.stock_quantity}
                   </td>
 
-                  {/* Minimum stock */}
                   <td className="px-6 py-4 text-sm text-slate-700">
                     {item.minimum_stock}
                   </td>
 
-                  {/* Status */}
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
@@ -102,14 +93,13 @@ function InventoryTable({
                     </span>
                   </td>
 
-                  {/* Action */}
                   <td className="px-6 py-4 text-right">
                     <button
                       type="button"
                       onClick={() =>
                         onAdjustStock(item)
                       }
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                     >
                       Adjust Stock
                     </button>

@@ -1,15 +1,9 @@
 import { supabase } from "../../../lib/supabase";
 
-export type StockMovement = {
-  id: string;
-  product_id: string;
-  movement_type: "add" | "remove";
-  quantity: number;
-  created_at: string;
-  product?: {
-    name: string;
-  };
-};
+import type {
+  StockMovement,
+  StockMovementType,
+} from "../types/inventory";
 
 export async function getStockMovements(): Promise<
   StockMovement[]
@@ -42,7 +36,8 @@ export async function getStockMovements(): Promise<
   return (data ?? []).map((movement) => ({
     id: movement.id,
     product_id: movement.product_id,
-    movement_type: movement.movement_type,
+    movement_type:
+      movement.movement_type as StockMovementType,
     quantity: movement.quantity,
     created_at: movement.created_at,
     product: Array.isArray(movement.products)
