@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+
 import type { Product } from "../types/product";
 
 type ProductListProps = {
@@ -9,6 +10,7 @@ type ProductListProps = {
   }[];
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void | Promise<void>;
+  canDelete: boolean;
 };
 
 type StockStatus =
@@ -23,14 +25,13 @@ function ProductList({
   categories,
   onEdit,
   onDelete,
+  canDelete,
 }: ProductListProps) {
-  const [deletingId, setDeletingId] = useState<string | null>(
-    null,
-  );
+  const [deletingId, setDeletingId] =
+    useState<string | null>(null);
 
-  const [deleteError, setDeleteError] = useState<string | null>(
-    null,
-  );
+  const [deleteError, setDeleteError] =
+    useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] =
     useState<FilterStatus>("all");
@@ -38,12 +39,16 @@ function ProductList({
   const [categoryFilter, setCategoryFilter] =
     useState<string>("all");
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] =
+    useState("");
 
-  function getCategoryName(categoryId: string) {
+  function getCategoryName(
+    categoryId: string,
+  ) {
     return (
       categories.find(
-        (category) => category.id === categoryId,
+        (category) =>
+          category.id === categoryId,
       )?.name ?? "Uncategorized"
     );
   }
@@ -59,7 +64,8 @@ function ProductList({
       return {
         key: "out_of_stock",
         label: "Out of Stock",
-        className: "bg-red-100 text-red-700",
+        className:
+          "bg-red-100 text-red-700",
       };
     }
 
@@ -70,21 +76,24 @@ function ProductList({
       return {
         key: "low_stock",
         label: "Low Stock",
-        className: "bg-yellow-100 text-yellow-700",
+        className:
+          "bg-yellow-100 text-yellow-700",
       };
     }
 
     return {
       key: "in_stock",
       label: "In Stock",
-      className: "bg-green-100 text-green-700",
+      className:
+        "bg-green-100 text-green-700",
     };
   }
 
   const statusCounts = useMemo(() => {
     return products.reduce(
       (counts, product) => {
-        const status = getStockStatus(product).key;
+        const status =
+          getStockStatus(product).key;
 
         counts[status] += 1;
 
@@ -119,7 +128,8 @@ function ProductList({
 
       const matchesCategory =
         categoryFilter === "all" ||
-        product.category_id === categoryFilter;
+        product.category_id ===
+          categoryFilter;
 
       return (
         matchesSearch &&
@@ -134,7 +144,9 @@ function ProductList({
     categoryFilter,
   ]);
 
-  async function handleDelete(product: Product) {
+  async function handleDelete(
+    product: Product,
+  ) {
     const confirmed = window.confirm(
       `Are you sure you want to delete "${product.name}"?`,
     );
@@ -247,7 +259,9 @@ function ProductList({
           {searchTerm && (
             <button
               type="button"
-              onClick={() => setSearchTerm("")}
+              onClick={() =>
+                setSearchTerm("")
+              }
               className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
             >
               Clear
@@ -269,7 +283,9 @@ function ProductList({
           id="category-filter"
           value={categoryFilter}
           onChange={(event) =>
-            setCategoryFilter(event.target.value)
+            setCategoryFilter(
+              event.target.value,
+            )
           }
           className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 sm:w-64"
         >
@@ -491,34 +507,30 @@ function ProductList({
                           <button
                             type="button"
                             onClick={() =>
-                              onEdit(
-                                product,
-                              )
+                              onEdit(product)
                             }
-                            disabled={
-                              isDeleting
-                            }
+                            disabled={isDeleting}
                             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Edit
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void handleDelete(
-                                product,
-                              )
-                            }
-                            disabled={
-                              isDeleting
-                            }
-                            className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {isDeleting
-                              ? "Deleting..."
-                              : "Delete"}
-                          </button>
+                          {canDelete && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void handleDelete(
+                                  product,
+                                )
+                              }
+                              disabled={isDeleting}
+                              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isDeleting
+                                ? "Deleting..."
+                                : "Delete"}
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

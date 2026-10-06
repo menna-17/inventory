@@ -1,15 +1,37 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  NavLink,
+  Outlet,
+  useNavigate,
+} from "react-router-dom";
+
+import { useAuth } from "../../app/providers/useAuth";
+
 import { signOut } from "../../features/auth/services/authService";
 
 function AppLayout() {
   const navigate = useNavigate();
 
+  const { role } = useAuth();
+
+  const canAccessProducts =
+    role === "owner" ||
+    role === "manager";
+
+  const canAccessCategories =
+    role === "owner" ||
+    role === "manager";
+
   async function handleSignOut() {
     try {
       await signOut();
-      navigate("/login", { replace: true });
+      navigate("/login", {
+        replace: true,
+      });
     } catch (error) {
-      console.error("Failed to sign out:", error);
+      console.error(
+        "Failed to sign out:",
+        error,
+      );
     }
   }
 
@@ -17,9 +39,17 @@ function AppLayout() {
     <div className="min-h-screen bg-slate-50">
       <header className="border-b bg-white">
         <div className="mx-auto flex h-16 items-center justify-between px-6">
-          <h1 className="text-xl font-bold text-slate-900">
-            Smart Inventory
-          </h1>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">
+              Smart Inventory
+            </h1>
+
+            {role && (
+              <p className="text-xs font-medium capitalize text-slate-500">
+                {role} account
+              </p>
+            )}
+          </div>
 
           <button
             type="button"
@@ -35,46 +65,85 @@ function AppLayout() {
         <aside className="w-64 border-r bg-white p-4">
           <nav aria-label="Main navigation">
             <ul className="space-y-1">
+              {/* Dashboard */}
               <li>
                 <NavLink
                   to="/dashboard"
-                  className="block rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100"
+                  className={({ isActive }) =>
+                    `block rounded-md px-3 py-2 text-sm font-medium transition ${
+                      isActive
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`
+                  }
                 >
                   Dashboard
                 </NavLink>
               </li>
 
-              <li>
-                <NavLink
-                  to="/products"
-                  className="block rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100"
-                >
-                  Products
-                </NavLink>
-              </li>
+              {/* Products - Owner + Manager */}
+              {canAccessProducts && (
+                <li>
+                  <NavLink
+                    to="/products"
+                    className={({ isActive }) =>
+                      `block rounded-md px-3 py-2 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-700 hover:bg-slate-100"
+                      }`
+                    }
+                  >
+                    Products
+                  </NavLink>
+                </li>
+              )}
 
-              <li>
-                <NavLink
-                  to="/categories"
-                  className="block rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100"
-                >
-                  Categories
-                </NavLink>
-              </li>
+              {/* Categories - Owner + Manager */}
+              {canAccessCategories && (
+                <li>
+                  <NavLink
+                    to="/categories"
+                    className={({ isActive }) =>
+                      `block rounded-md px-3 py-2 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-700 hover:bg-slate-100"
+                      }`
+                    }
+                  >
+                    Categories
+                  </NavLink>
+                </li>
+              )}
 
+              {/* Inventory - All roles */}
               <li>
                 <NavLink
                   to="/inventory"
-                  className="block rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100"
+                  className={({ isActive }) =>
+                    `block rounded-md px-3 py-2 text-sm font-medium transition ${
+                      isActive
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`
+                  }
                 >
                   Inventory
                 </NavLink>
               </li>
 
+              {/* Sales - All roles */}
               <li>
                 <NavLink
                   to="/sales"
-                  className="block rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100"
+                  className={({ isActive }) =>
+                    `block rounded-md px-3 py-2 text-sm font-medium transition ${
+                      isActive
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`
+                  }
                 >
                   Sales
                 </NavLink>

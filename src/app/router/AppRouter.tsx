@@ -7,8 +7,12 @@ import {
 } from "react-router-dom";
 
 import AppLayout from "../../components/layout/AppLayout";
-import ProtectedRoute from "./ProtectedRoute";
 import LoginForm from "../../features/auth/components/LoginForm";
+
+import ProtectedRoute from "./ProtectedRoute";
+import RoleProtectedRoute from "./RoleProtectedRoute";
+
+import type { Role } from "../providers/auth-context";
 
 /*
  * -------------------------------------------------------
@@ -72,6 +76,25 @@ function LoginPage() {
  */
 
 function AppRouter() {
+  /*
+   * Users who can access all operational pages.
+   */
+  const allRoles: Role[] = [
+    "owner",
+    "manager",
+    "staff",
+  ];
+
+  /*
+   * Users who can manage Products and Categories.
+   *
+   * Staff intentionally does not have access.
+   */
+  const managementRoles: Role[] = [
+    "owner",
+    "manager",
+  ];
+
   return (
     <BrowserRouter>
       <Suspense
@@ -100,35 +123,98 @@ function AppRouter() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
 
-              {/* Dashboard */}
-              <Route
-                path="/dashboard"
-                element={<DashboardPage />}
-              />
+              {/* =================================================
+                  Dashboard
+                  Owner + Manager + Staff
+                  ================================================= */}
 
-              {/* Products */}
               <Route
-                path="/products"
-                element={<ProductsPage />}
-              />
+                element={
+                  <RoleProtectedRoute
+                    allowedRoles={allRoles}
+                  />
+                }
+              >
+                <Route
+                  path="/dashboard"
+                  element={<DashboardPage />}
+                />
+              </Route>
 
-              {/* Categories */}
-              <Route
-                path="/categories"
-                element={<CategoriesPage />}
-              />
+              {/* =================================================
+                  Products
+                  Owner + Manager
+                  Staff has no access
+                  ================================================= */}
 
-              {/* Inventory */}
               <Route
-                path="/inventory"
-                element={<InventoryPage />}
-              />
+                element={
+                  <RoleProtectedRoute
+                    allowedRoles={managementRoles}
+                  />
+                }
+              >
+                <Route
+                  path="/products"
+                  element={<ProductsPage />}
+                />
 
-              {/* Sales */}
+                {/* =================================================
+                    Categories
+                    Owner + Manager
+                    Staff has no access
+                    ================================================= */}
+
+                <Route
+                  path="/categories"
+                  element={<CategoriesPage />}
+                />
+              </Route>
+
+              {/* =================================================
+                  Inventory
+                  Owner + Manager + Staff
+                  
+                  IMPORTANT:
+                  Staff can view inventory.
+                  Staff will NOT be allowed to adjust stock.
+                  That restriction will be implemented in the
+                  Inventory UI/action layer next.
+                  ================================================= */}
+
               <Route
-                path="/sales"
-                element={<SalesPage />}
-              />
+                element={
+                  <RoleProtectedRoute
+                    allowedRoles={allRoles}
+                  />
+                }
+              >
+                <Route
+                  path="/inventory"
+                  element={<InventoryPage />}
+                />
+              </Route>
+
+              {/* =================================================
+                  Sales
+                  Owner + Manager + Staff
+
+                  All roles can access Sales because Staff
+                  needs to be able to process sales.
+                  ================================================= */}
+
+              <Route
+                element={
+                  <RoleProtectedRoute
+                    allowedRoles={allRoles}
+                  />
+                }
+              >
+                <Route
+                  path="/sales"
+                  element={<SalesPage />}
+                />
+              </Route>
 
             </Route>
           </Route>

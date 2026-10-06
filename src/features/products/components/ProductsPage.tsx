@@ -1,12 +1,24 @@
 import { useState } from "react";
+
 import ProductList from "./ProductList";
 import ProductForm from "./ProductForm";
+
 import { useProducts } from "../hooks/useProducts";
 import { deleteProduct } from "../services/productService";
+
+import { useAuth } from "../../../app/providers/useAuth";
+
 import type { Product } from "../types/product";
 
 function ProductsPage() {
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { role } = useAuth();
+
+  const canDeleteProducts =
+    role === "owner";
+
+  const [isFormOpen, setIsFormOpen] =
+    useState(false);
+
   const [selectedProduct, setSelectedProduct] =
     useState<Product | null>(null);
 
@@ -23,7 +35,9 @@ function ProductsPage() {
     setIsFormOpen(true);
   }
 
-  function handleEditProduct(product: Product) {
+  function handleEditProduct(
+    product: Product,
+  ) {
     setSelectedProduct(product);
     setIsFormOpen(true);
   }
@@ -38,7 +52,9 @@ function ProductsPage() {
     await refetch();
   }
 
-  async function handleDeleteProduct(productId: string) {
+  async function handleDeleteProduct(
+    productId: string,
+  ) {
     await deleteProduct(productId);
     await refetch();
   }
@@ -132,7 +148,10 @@ function ProductsPage() {
           </div>
 
           <ProductForm
-            key={selectedProduct?.id ?? "new-product"}
+            key={
+              selectedProduct?.id ??
+              "new-product"
+            }
             categories={categories}
             product={selectedProduct}
             onSuccess={handleFormSuccess}
@@ -145,6 +164,7 @@ function ProductsPage() {
         categories={categories}
         onEdit={handleEditProduct}
         onDelete={handleDeleteProduct}
+        canDelete={canDeleteProducts}
       />
     </section>
   );

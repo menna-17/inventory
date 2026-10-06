@@ -1,3 +1,4 @@
+import { useAuth } from "../../../app/providers/useAuth";
 import type { InventoryItem } from "../types/inventory";
 
 type InventoryTableProps = {
@@ -36,6 +37,19 @@ function InventoryTable({
   items,
   onAdjustStock,
 }: InventoryTableProps) {
+  const { role } = useAuth();
+
+  /*
+   * Only Owner and Manager can manually
+   * adjust inventory stock.
+   *
+   * Staff can view inventory but cannot
+   * manually add or remove stock.
+   */
+  const canAdjustStock =
+    role === "owner" ||
+    role === "manager";
+
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className="overflow-x-auto">
@@ -58,9 +72,11 @@ function InventoryTable({
                 Status
               </th>
 
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
-                Action
-              </th>
+              {canAdjustStock && (
+                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Action
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -93,17 +109,19 @@ function InventoryTable({
                     </span>
                   </td>
 
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onAdjustStock(item)
-                      }
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                    >
-                      Adjust Stock
-                    </button>
-                  </td>
+                  {canAdjustStock && (
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onAdjustStock(item)
+                        }
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Adjust Stock
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}

@@ -14,6 +14,11 @@ export type Sale = {
   user_id: string;
   total_amount: number;
   created_at: string;
+
+  user?: {
+    full_name: string | null;
+  };
+
   items: SaleItem[];
 };
 

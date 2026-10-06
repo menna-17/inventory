@@ -1,33 +1,47 @@
 import { useEffect, useState } from "react";
+
 import CategoryForm from "./CategoryForm";
+
 import {
   deleteCategory,
   getCategories,
 } from "../services/categoryService";
+
+import { useAuth } from "../../../app/providers/useAuth";
+
 import type { Category } from "../types/product";
 
 function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(
-    [],
-  );
+  const { role } = useAuth();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const canDeleteCategories =
+    role === "owner";
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [categories, setCategories] =
+    useState<Category[]>([]);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const [isFormOpen, setIsFormOpen] =
+    useState(false);
+
   const [selectedCategory, setSelectedCategory] =
     useState<Category | null>(null);
 
-  const [deletingId, setDeletingId] = useState<string | null>(
-    null,
-  );
+  const [deletingId, setDeletingId] =
+    useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadInitialCategories() {
       try {
-        const data = await getCategories();
+        const data =
+          await getCategories();
 
         if (!isMounted) {
           return;
@@ -48,7 +62,9 @@ function CategoriesPage() {
         if (error instanceof Error) {
           setError(error.message);
         } else {
-          setError("Failed to load categories.");
+          setError(
+            "Failed to load categories.",
+          );
         }
       } finally {
         if (isMounted) {
@@ -68,7 +84,8 @@ function CategoriesPage() {
     setError(null);
 
     try {
-      const data = await getCategories();
+      const data =
+        await getCategories();
 
       setCategories(data);
     } catch (error) {
@@ -80,7 +97,9 @@ function CategoriesPage() {
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError("Failed to load categories.");
+        setError(
+          "Failed to load categories.",
+        );
       }
     }
   }
@@ -90,7 +109,9 @@ function CategoriesPage() {
     setIsFormOpen(true);
   }
 
-  function handleEditCategory(category: Category) {
+  function handleEditCategory(
+    category: Category,
+  ) {
     setSelectedCategory(category);
     setIsFormOpen(true);
   }
@@ -131,7 +152,9 @@ function CategoriesPage() {
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError("Failed to delete category.");
+        setError(
+          "Failed to delete category.",
+        );
       }
     } finally {
       setDeletingId(null);
@@ -194,7 +217,9 @@ function CategoriesPage() {
 
           <button
             type="button"
-            onClick={() => void loadCategories()}
+            onClick={() =>
+              void loadCategories()
+            }
             className="mt-3 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
           >
             Try again
@@ -262,7 +287,8 @@ function CategoriesPage() {
             <tbody className="divide-y divide-slate-200">
               {categories.map((category) => {
                 const isDeleting =
-                  deletingId === category.id;
+                  deletingId ===
+                  category.id;
 
                 return (
                   <tr
@@ -285,6 +311,7 @@ function CategoriesPage() {
 
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
+                        {/* Edit */}
                         <button
                           type="button"
                           onClick={() =>
@@ -298,20 +325,23 @@ function CategoriesPage() {
                           Edit
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            void handleDeleteCategory(
-                              category,
-                            )
-                          }
-                          disabled={isDeleting}
-                          className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {isDeleting
-                            ? "Deleting..."
-                            : "Delete"}
-                        </button>
+                        {/* Delete - Owner only */}
+                        {canDeleteCategories && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void handleDeleteCategory(
+                                category,
+                              )
+                            }
+                            disabled={isDeleting}
+                            className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isDeleting
+                              ? "Deleting..."
+                              : "Delete"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

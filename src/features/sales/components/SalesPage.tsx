@@ -71,7 +71,11 @@ function SalesPage() {
       />
 
       {/* Sales History */}
-      <SalesHistory sales={sales} />
+      <SalesHistory
+        sales={sales}
+        title="Sales History"
+        description="View previous sales, who processed them, and their dates."
+      />
     </section>
   );
 }

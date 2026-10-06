@@ -36,8 +36,7 @@ function DashboardPage() {
         </h1>
 
         <p className="mt-1 text-sm text-slate-600">
-          Overview of your inventory and
-          sales.
+          Overview of your inventory and sales.
         </p>
       </div>
 
@@ -55,9 +54,7 @@ function DashboardPage() {
 
       {/* Low Stock */}
       <LowStockSection
-        products={
-          lowStockProducts
-        }
+        products={lowStockProducts}
       />
 
       {/* Recent Sales */}

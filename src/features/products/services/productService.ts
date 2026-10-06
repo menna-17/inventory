@@ -22,11 +22,19 @@ type UpdateProductInput = {
   image_url?: string;
 };
 
+/*
+ * -------------------------------------------------------
+ * Get products
+ * -------------------------------------------------------
+ */
+
 export async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", {
+      ascending: false,
+    });
 
   if (error) {
     console.error(
@@ -39,6 +47,18 @@ export async function getProducts(): Promise<Product[]> {
 
   return data ?? [];
 }
+
+/*
+ * -------------------------------------------------------
+ * Create product
+ * -------------------------------------------------------
+ *
+ * Initial stock can be set when a product is created.
+ *
+ * Future stock changes must be handled through
+ * Inventory -> Adjust Stock.
+ * -------------------------------------------------------
+ */
 
 export async function createProduct(
   input: CreateProductInput,
@@ -69,6 +89,18 @@ export async function createProduct(
   return data;
 }
 
+/*
+ * -------------------------------------------------------
+ * Update product
+ * -------------------------------------------------------
+ *
+ * Product editing does NOT change stock.
+ *
+ * Stock must only be changed through the inventory
+ * stock-adjustment flow.
+ * -------------------------------------------------------
+ */
+
 export async function updateProduct(
   input: UpdateProductInput,
 ): Promise<Product> {
@@ -78,7 +110,6 @@ export async function updateProduct(
       name: input.name,
       category_id: input.category_id,
       price: input.price,
-      stock_quantity: input.stock_quantity,
       minimum_stock: input.minimum_stock,
       description: input.description || null,
       image_url: input.image_url || null,
@@ -99,9 +130,25 @@ export async function updateProduct(
   return data;
 }
 
+/*
+ * -------------------------------------------------------
+ * Delete product
+ * -------------------------------------------------------
+ *
+ * Database RLS should enforce that only Owner accounts
+ * can perform this operation.
+ * -------------------------------------------------------
+ */
+
 export async function deleteProduct(
   id: string,
 ): Promise<void> {
+  if (!id) {
+    throw new Error(
+      "Product is required.",
+    );
+  }
+
   const { error } = await supabase
     .from("products")
     .delete()

@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../../../app/providers/useAuth";
+
 import type {
   LowStockProduct,
 } from "../types/dashboard";
@@ -12,6 +14,18 @@ function LowStockSection({
   products,
 }: LowStockSectionProps) {
   const navigate = useNavigate();
+
+  const { role } = useAuth();
+
+  /*
+   * Only Owner and Manager can adjust stock.
+   *
+   * Staff can see low-stock products, but they
+   * cannot manually change inventory.
+   */
+  const canAdjustStock =
+    role === "owner" ||
+    role === "manager";
 
   return (
     <div className="mt-8 overflow-hidden rounded-lg border bg-white shadow-sm">
@@ -54,9 +68,11 @@ function LowStockSection({
                   Status
                 </th>
 
-                <th className="px-5 py-3 text-right font-medium text-slate-600">
-                  Action
-                </th>
+                {canAdjustStock && (
+                  <th className="px-5 py-3 text-right font-medium text-slate-600">
+                    Action
+                  </th>
+                )}
               </tr>
             </thead>
 
@@ -86,21 +102,23 @@ function LowStockSection({
                   </td>
 
                   {/* Action */}
-                  <td className="px-5 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          `/inventory?productId=${encodeURIComponent(
-                            product.id,
-                          )}`,
-                        )
-                      }
-                      className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                    >
-                      Adjust Stock
-                    </button>
-                  </td>
+                  {canAdjustStock && (
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(
+                            `/inventory?productId=${encodeURIComponent(
+                              product.id,
+                            )}`,
+                          )
+                        }
+                        className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Adjust Stock
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

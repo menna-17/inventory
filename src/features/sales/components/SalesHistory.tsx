@@ -2,6 +2,8 @@ import type { Sale } from "../types/sales";
 
 type SalesHistoryProps = {
   sales: Sale[];
+  title?: string;
+  description?: string;
 };
 
 function formatDate(date: string) {
@@ -14,16 +16,18 @@ function formatPrice(price: number) {
 
 function SalesHistory({
   sales,
+  title = "Sales History",
+  description = "View previous sales, who processed them, and their dates.",
 }: SalesHistoryProps) {
   return (
     <div>
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-slate-900">
-          Sales History
+          {title}
         </h2>
 
         <p className="mt-1 text-sm text-slate-600">
-          View previous sales and their dates.
+          {description}
         </p>
       </div>
 
@@ -49,6 +53,10 @@ function SalesHistory({
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Processed By
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                   Date
                 </th>
               </tr>
@@ -62,7 +70,7 @@ function SalesHistory({
                   return (
                     <tr key={sale.id}>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-6 py-4 text-sm text-slate-500"
                       >
                         Sale has no items.
@@ -94,6 +102,11 @@ function SalesHistory({
                       {formatPrice(
                         sale.total_amount,
                       )}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm text-slate-700">
+                      {sale.user?.full_name ??
+                        "Unknown User"}
                     </td>
 
                     <td className="px-6 py-4 text-sm text-slate-600">

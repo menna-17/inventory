@@ -1,5 +1,4 @@
-import type { StockMovement } from "../services/stockMovementService";
-
+import type { StockMovement } from "../types/inventory";
 type StockMovementHistoryProps = {
   movements: StockMovement[];
   isLoading: boolean;
@@ -30,7 +29,7 @@ function StockMovementHistory({
         </h2>
 
         <p className="mt-1 text-sm text-slate-600">
-          Track when stock was added or removed.
+          Track when stock was added or removed and who made the change.
         </p>
       </div>
 
@@ -91,6 +90,10 @@ function StockMovementHistory({
                   </th>
 
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                    User
+                  </th>
+
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Date
                   </th>
                 </tr>
@@ -133,6 +136,13 @@ function StockMovementHistory({
                         {
                           movement.quantity
                         }
+                      </td>
+
+                      {/* User */}
+                      <td className="px-6 py-4 text-sm text-slate-700">
+                        {movement.user
+                          ?.full_name ??
+                          "Unknown User"}
                       </td>
 
                       {/* Date */}

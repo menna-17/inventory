@@ -25,8 +25,14 @@ export type StockMovement = {
   product_id: string;
   movement_type: StockMovementType;
   quantity: number;
+  user_id: string | null;
   created_at: string;
+
   product?: {
     name: string;
+  };
+
+  user?: {
+    full_name: string | null;
   };
 };

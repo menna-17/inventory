@@ -13,7 +13,9 @@ const initialData: DashboardData = {
     totalSales: 0,
     salesToday: 0,
   },
+
   recentSales: [],
+
   lowStockProducts: [],
 };
 

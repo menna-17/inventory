@@ -38,15 +38,16 @@ export async function getInventoryItems(): Promise<
  * Update stock
  * -------------------------------------------------------
  *
- * The service calculates the new stock quantity.
+ * Stock adjustment is handled by the database RPC.
  *
- * Add:
- *   current stock + quantity
- *
- * Remove:
- *   current stock - quantity
- *
- * Stock can never become negative.
+ * The RPC:
+ * - checks Owner / Manager permission
+ * - validates the movement
+ * - calculates the new stock
+ * - prevents negative stock
+ * - updates the product
+ * - records the stock movement
+ * - performs the operation atomically
  * -------------------------------------------------------
  */
 
@@ -70,104 +71,46 @@ export async function updateStock(
     );
   }
 
-  /*
-   * Get the current product stock.
-   */
-
-  const {
-    data: product,
-    error: productError,
-  } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", productId)
-    .single();
-
-  if (productError) {
-    console.error(
-      "updateStock get product error:",
-      productError,
-    );
-
-    throw productError;
-  }
-
-  if (!product) {
+  if (
+    movementType !== "add" &&
+    movementType !== "remove"
+  ) {
     throw new Error(
-      "Product was not found.",
+      "Invalid stock movement type.",
     );
   }
 
-  const currentQuantity =
-    product.stock_quantity;
-
   /*
-   * Calculate the new quantity.
-   */
-
-  let newQuantity: number;
-
-  if (movementType === "add") {
-    newQuantity =
-      currentQuantity + movementQuantity;
-  } else {
-    newQuantity =
-      currentQuantity - movementQuantity;
-
-    if (newQuantity < 0) {
-      throw new Error(
-        `Not enough stock. Available stock: ${currentQuantity}.`,
-      );
-    }
-  }
-
-  /*
-   * Update the product stock.
+   * Let Supabase/PostgreSQL handle the
+   * stock adjustment.
    */
 
   const {
-    data: updatedProduct,
-    error: updateError,
-  } = await supabase
-    .from("products")
-    .update({
-      stock_quantity: newQuantity,
-    })
-    .eq("id", productId)
-    .select()
-    .single();
+    data,
+    error,
+  } = await supabase.rpc(
+    "adjust_stock",
+    {
+      p_product_id: productId,
+      p_movement_type: movementType,
+      p_quantity: movementQuantity,
+    },
+  );
 
-  if (updateError) {
+  if (error) {
     console.error(
-      "updateStock Supabase error:",
-      updateError,
+      "updateStock RPC error:",
+      error,
     );
 
-    throw updateError;
+    throw error;
   }
 
-  /*
-   * Record the stock movement.
-   */
-
-  const {
-    error: movementError,
-  } = await supabase
-    .from("stock_movements")
-    .insert({
-      product_id: productId,
-      movement_type: movementType,
-      quantity: movementQuantity,
-    });
-
-  if (movementError) {
-    console.error(
-      "create stock movement Supabase error:",
-      movementError,
+  if (!data) {
+    throw new Error(
+      "Stock was not updated.",
     );
-
-    throw movementError;
   }
 
-  return updatedProduct;
+  return data as InventoryItem;
 }

@@ -5,41 +5,75 @@ import type {
   Sale,
 } from "../types/sales";
 
+type SalesHistoryRow = {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  created_at: string;
+  user_name: string | null;
+};
+
+/*
+ * -------------------------------------------------------
+ * Get sales history
+ * -------------------------------------------------------
+ *
+ * This is the single source of truth for sales data.
+ *
+ * Sales page:
+ *   uses all returned sales.
+ *
+ * Dashboard:
+ *   will use the first few sales for Recent Sales.
+ *
+ * The database RPC safely provides the processor's
+ * name without exposing the profiles table directly.
+ * -------------------------------------------------------
+ */
+
 export async function getSales(): Promise<Sale[]> {
-  const { data: salesData, error: salesError } =
-    await supabase
-      .from("sales")
-      .select(
-        "id, user_id, total_amount, created_at",
-      )
-      .order("created_at", {
-        ascending: false,
-      });
+  const {
+    data: salesData,
+    error: salesError,
+  } = await supabase.rpc(
+    "get_sales_history",
+  );
 
   if (salesError) {
     console.error(
-      "getSales sales error:",
+      "getSales sales history error:",
       salesError,
     );
 
     throw salesError;
   }
 
-  if (!salesData || salesData.length === 0) {
+  const sales =
+    (salesData ?? []) as SalesHistoryRow[];
+
+  if (sales.length === 0) {
     return [];
   }
 
-  const saleIds = salesData.map(
+  /*
+   * -----------------------------------------------------
+   * Get sale items
+   * -----------------------------------------------------
+   */
+
+  const saleIds = sales.map(
     (sale) => sale.id,
   );
 
-  const { data: itemsData, error: itemsError } =
-    await supabase
-      .from("sale_items")
-      .select(
-        "id, sale_id, product_id, quantity, unit_price",
-      )
-      .in("sale_id", saleIds);
+  const {
+    data: itemsData,
+    error: itemsError,
+  } = await supabase
+    .from("sale_items")
+    .select(
+      "id, sale_id, product_id, quantity, unit_price",
+    )
+    .in("sale_id", saleIds);
 
   if (itemsError) {
     console.error(
@@ -49,6 +83,12 @@ export async function getSales(): Promise<Sale[]> {
 
     throw itemsError;
   }
+
+  /*
+   * -----------------------------------------------------
+   * Get product names
+   * -----------------------------------------------------
+   */
 
   const productIds = [
     ...new Set(
@@ -84,25 +124,69 @@ export async function getSales(): Promise<Sale[]> {
     products = productsData ?? [];
   }
 
-  return salesData.map((sale) => {
-    const saleItems = (itemsData ?? [])
-      .filter(
-        (item) => item.sale_id === sale.id,
-      )
-      .map((item) => ({
-        ...item,
-        product: products.find(
-          (product) =>
-            product.id === item.product_id,
-        ),
-      }));
+  /*
+   * -----------------------------------------------------
+   * Combine sales, items, products, and users
+   * -----------------------------------------------------
+   */
 
-    return {
-      ...sale,
-      items: saleItems,
-    };
-  });
+  return sales.map(
+    (sale) => {
+      const saleItems = (
+        itemsData ?? []
+      )
+        .filter(
+          (item) =>
+            item.sale_id ===
+            sale.id,
+        )
+        .map((item) => ({
+          ...item,
+          product:
+            products.find(
+              (product) =>
+                product.id ===
+                item.product_id,
+            ),
+        }));
+
+      return {
+        id: sale.id,
+        user_id: sale.user_id,
+        total_amount:
+          Number(
+            sale.total_amount,
+          ),
+        created_at:
+          sale.created_at,
+        user: {
+          full_name:
+            sale.user_name,
+        },
+        items: saleItems,
+      };
+    },
+  );
 }
+
+/*
+ * -------------------------------------------------------
+ * Create sale
+ * -------------------------------------------------------
+ *
+ * Sale creation remains handled by the database RPC.
+ *
+ * The RPC:
+ * - validates authentication
+ * - validates products and quantities
+ * - checks stock
+ * - creates the sale
+ * - creates sale items
+ * - decreases inventory
+ * - records the stock movement
+ * - records the authenticated user
+ * -------------------------------------------------------
+ */
 
 export async function createSale(
   input: CreateSaleInput,
@@ -134,7 +218,9 @@ export async function createSale(
   }
 
   if (
-    !Number.isInteger(input.quantity) ||
+    !Number.isInteger(
+      input.quantity,
+    ) ||
     input.quantity <= 0
   ) {
     throw new Error(
@@ -142,15 +228,22 @@ export async function createSale(
     );
   }
 
-  const { data, error } =
-    await supabase.rpc("create_sale", {
+  const {
+    data,
+    error,
+  } = await supabase.rpc(
+    "create_sale",
+    {
       p_items: [
         {
-          product_id: input.productId,
-          quantity: input.quantity,
+          product_id:
+            input.productId,
+          quantity:
+            input.quantity,
         },
       ],
-    });
+    },
+  );
 
   if (error) {
     console.error(
