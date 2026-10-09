@@ -1,7 +1,9 @@
+
 import {
   Navigate,
   Outlet,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 
 import { useAuth } from "../providers/useAuth";
@@ -22,6 +24,7 @@ function RoleProtectedRoute({
   } = useAuth();
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -83,10 +86,14 @@ function RoleProtectedRoute({
 
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() =>
+              navigate("/dashboard", {
+                replace: true,
+              })
+            }
             className="mt-5 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
-            Go back
+            Go to dashboard
           </button>
         </div>
       </main>

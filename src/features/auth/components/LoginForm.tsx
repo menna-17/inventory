@@ -1,6 +1,8 @@
-import {  useState } from "react";
+
+import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { signInWithPassword } from "../services/authService";
 
 function LoginForm() {
@@ -11,14 +13,18 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
+
+    if (isSubmitting) return;
 
     setErrorMessage("");
     setIsSubmitting(true);
 
     try {
-      await signInWithPassword(email, password);
+      await signInWithPassword(email.trim(), password);
       navigate("/dashboard", { replace: true });
     } catch (error) {
       setErrorMessage(
@@ -35,7 +41,6 @@ function LoginForm() {
     <form
       onSubmit={handleSubmit}
       className="w-full max-w-md space-y-6"
-      noValidate
     >
       <div>
         <h1 className="text-3xl font-bold text-slate-900">
@@ -60,10 +65,17 @@ function LoginForm() {
           name="email"
           type="email"
           autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+          aria-invalid={Boolean(errorMessage)}
+          aria-describedby={
+            errorMessage ? "login-error" : undefined
+          }
+          disabled={isSubmitting}
+          className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100"
         />
       </div>
 
@@ -83,14 +95,21 @@ function LoginForm() {
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+          aria-invalid={Boolean(errorMessage)}
+          aria-describedby={
+            errorMessage ? "login-error" : undefined
+          }
+          disabled={isSubmitting}
+          className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100"
         />
       </div>
 
       {errorMessage && (
         <p
+          id="login-error"
           role="alert"
-          className="rounded-md bg-red-50 p-3 text-sm text-red-700"
+          aria-live="polite"
+          className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
         >
           {errorMessage}
         </p>
@@ -99,7 +118,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-md bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex min-h-11 w-full items-center justify-center rounded-lg bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSubmitting ? "Signing in..." : "Sign in"}
       </button>

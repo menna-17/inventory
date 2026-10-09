@@ -1,4 +1,6 @@
+
 import {
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -26,161 +28,107 @@ type UseInventoryResult = {
   ) => Promise<boolean>;
 };
 
+function normalizeError(
+  error: unknown,
+  fallback: string,
+): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error(fallback);
+}
+
 export function useInventory(): UseInventoryResult {
-  const [items, setItems] = useState<
-    InventoryItem[]
-  >([]);
-
-  const [isLoading, setIsLoading] =
-    useState(true);
-
-  const [isUpdatingStock, setIsUpdatingStock] =
-    useState(false);
-
-  const [error, setError] =
-    useState<Error | null>(null);
-
-  /*
-   * -------------------------------------------------------
-   * Load inventory
-   * -------------------------------------------------------
-   */
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingStock, setIsUpdatingStock] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
-    async function loadInventory() {
+    async function loadInitialInventory() {
       try {
-        const data =
-          await getInventoryItems();
+        const data = await getInventoryItems();
 
-        if (!isMounted) {
-          return;
-        }
+        if (cancelled) return;
 
         setItems(data);
         setError(null);
       } catch (error) {
-        console.error(
-          "useInventory error:",
-          error,
+        if (cancelled) return;
+
+        console.error("Initial inventory load error:", error);
+        setError(
+          normalizeError(error, "Failed to load inventory."),
         );
-
-        if (!isMounted) {
-          return;
-        }
-
-        if (error instanceof Error) {
-          setError(error);
-        } else {
-          setError(
-            new Error(
-              `Unknown error: ${JSON.stringify(error)}`,
-            ),
-          );
-        }
       } finally {
-        if (isMounted) {
+        if (!cancelled) {
           setIsLoading(false);
         }
       }
     }
 
-    void loadInventory();
+    void loadInitialInventory();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
   }, []);
 
-  /*
-   * -------------------------------------------------------
-   * Refetch inventory
-   * -------------------------------------------------------
-   */
-
-  async function refetch() {
+  const refetch = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const data =
-        await getInventoryItems();
-
+      const data = await getInventoryItems();
       setItems(data);
     } catch (error) {
-      console.error(
-        "useInventory refetch error:",
+      console.error("useInventory refetch error:", error);
+
+      const normalized = normalizeError(
         error,
+        "Failed to refresh inventory.",
       );
 
-      if (error instanceof Error) {
-        setError(error);
-      } else {
-        setError(
-          new Error(
-            `Unknown error: ${JSON.stringify(error)}`,
-          ),
-        );
-      }
+      setError(normalized);
+      throw normalized;
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
 
-  /*
-   * -------------------------------------------------------
-   * Adjust stock
-   * -------------------------------------------------------
-   */
+  const adjustStock = useCallback(
+    async (
+      productId: string,
+      movementType: StockMovementType,
+      quantity: number,
+    ): Promise<boolean> => {
+      setIsUpdatingStock(true);
+      setError(null);
 
-  async function adjustStock(
-    productId: string,
-    movementType: StockMovementType,
-    quantity: number,
-  ): Promise<boolean> {
-    setError(null);
-    setIsUpdatingStock(true);
+      try {
+        await updateStock(productId, movementType, quantity);
 
-    try {
-      await updateStock(
-        productId,
-        movementType,
-        quantity,
-      );
+        const data = await getInventoryItems();
+        setItems(data);
 
-      /*
-       * Reload inventory so the table immediately
-       * shows the new stock quantity.
-       */
+        return true;
+      } catch (error) {
+        console.error("adjustStock error:", error);
 
-      const data =
-        await getInventoryItems();
-
-      setItems(data);
-
-      return true;
-    } catch (error) {
-      console.error(
-        "adjustStock error:",
-        error,
-      );
-
-      if (error instanceof Error) {
-        setError(error);
-      } else {
         setError(
-          new Error(
-            `Unknown error: ${JSON.stringify(error)}`,
-          ),
+          normalizeError(error, "Failed to adjust stock."),
         );
-      }
 
-      return false;
-    } finally {
-      setIsUpdatingStock(false);
-    }
-  }
+        return false;
+      } finally {
+        setIsUpdatingStock(false);
+      }
+    },
+    [],
+  );
 
   return {
     items,

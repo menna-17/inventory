@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useState,
@@ -6,9 +7,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "../../lib/supabase";
-import {
-  getCurrentUserRole,
-} from "../../features/auth/services/authService";
+import { getCurrentUserRole } from "../../features/auth/services/authService";
 
 import {
   AuthContext,
@@ -25,11 +24,10 @@ const validRoles: Role[] = [
   "staff",
 ];
 
-function isValidRole(
-  value: string,
-): value is Role {
-  return validRoles.includes(
-    value as Role,
+function isValidRole(value: unknown): value is Role {
+  return (
+    typeof value === "string" &&
+    validRoles.includes(value as Role)
   );
 }
 
@@ -42,62 +40,65 @@ export function AuthProvider({
   const [role, setRole] =
     useState<Role | null>(null);
 
+  const [roleUserId, setRoleUserId] =
+    useState<string | null>(null);
+
   const [isInitializing, setIsInitializing] =
     useState(true);
-
-  const [isRoleLoading, setIsRoleLoading] =
-    useState(false);
 
   const [error, setError] =
     useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-
-    async function loadInitialSession() {
-      const {
-        data,
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (sessionError) {
-        console.error(
-          "Failed to get initial session:",
-          sessionError,
-        );
-
-        setError(
-          "Unable to restore your session.",
-        );
-      }
-
-      setSession(data.session);
-      setIsInitializing(false);
-    }
-
-    void loadInitialSession();
+    let authEventReceived = false;
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
-        if (!isMounted) {
-          return;
-        }
+        authEventReceived = true;
+
+        if (!isMounted) return;
 
         setSession(newSession);
-
-        if (!newSession) {
-          setRole(null);
-          setError(null);
-          setIsRoleLoading(false);
-        }
       },
     );
+
+    async function loadInitialSession() {
+      try {
+        const {
+          data,
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
+
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        // Preserve a newer session received through an auth event.
+        if (!authEventReceived) {
+          setSession(data.session);
+        }
+      } catch (sessionError) {
+        console.error(
+          "Failed to restore initial session:",
+          sessionError,
+        );
+
+        if (isMounted) {
+          setError("Unable to restore your session.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsInitializing(false);
+        }
+      }
+    }
+
+    void loadInitialSession();
 
     return () => {
       isMounted = false;
@@ -106,74 +107,76 @@ export function AuthProvider({
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    let isCurrent = true;
+    const userId = session?.user.id;
+
+    if (!userId) {
+      return () => {
+        isCurrent = false;
+      };
+    }
 
     async function loadRole() {
-      if (!session?.user.id) {
-        setRole(null);
-        setIsRoleLoading(false);
-        return;
-      }
-
-      setIsRoleLoading(true);
-      setError(null);
-
       try {
         const roleValue =
-          await getCurrentUserRole(
-            session.user.id,
-          );
+          await getCurrentUserRole(userId);
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isCurrent) return;
 
         if (!isValidRole(roleValue)) {
           throw new Error(
-            `Unsupported account role: ${roleValue}`,
+            "Your account has an invalid role.",
           );
         }
 
         setRole(roleValue);
-      } catch (error) {
+        setRoleUserId(userId);
+        setError(null);
+      } catch (roleError) {
         console.error(
           "AuthProvider role error:",
-          error,
+          roleError,
         );
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isCurrent) return;
 
         setRole(null);
-
+        setRoleUserId(null);
         setError(
-          error instanceof Error
-            ? error.message
-            : "Unable to load your account permissions.",
+          "Unable to load your account permissions. Please try again.",
         );
-      } finally {
-        if (isMounted) {
-          setIsRoleLoading(false);
-        }
       }
     }
 
     void loadRole();
 
     return () => {
-      isMounted = false;
+      isCurrent = false;
     };
   }, [session?.user.id]);
 
+  const currentUserId = session?.user.id ?? null;
+
+  const currentRole =
+    currentUserId !== null &&
+    currentUserId === roleUserId
+      ? role
+      : null;
+
+  const hasRoleError =
+    currentUserId !== null &&
+    error !== null;
+
   const isLoading =
     isInitializing ||
-    (session !== null && isRoleLoading);
+    (currentUserId !== null &&
+      currentRole === null &&
+      !hasRoleError);
 
   const value = {
     session,
     user: session?.user ?? null,
-    role,
+    role: currentRole,
     isLoading,
     error,
   };

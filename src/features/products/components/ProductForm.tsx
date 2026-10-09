@@ -1,4 +1,9 @@
+
 import { useState } from "react";
+import type {
+  ChangeEvent,
+  FormEvent,
+} from "react";
 
 import type { Category, Product } from "../types/product";
 
@@ -23,43 +28,58 @@ type FormValues = {
   image_url: string;
 };
 
-type FormErrors = Partial<
-  Record<keyof FormValues, string>
->;
+type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 function getInitialFormValues(
   product?: Product | null,
 ): FormValues {
   return {
     name: product?.name ?? "",
-
-    category_id:
-      product?.category_id ?? "",
-
+    category_id: product?.category_id ?? "",
     price:
-      product?.price !== undefined &&
-      product?.price !== null
+      product?.price !== undefined && product?.price !== null
         ? String(product.price)
         : "",
-
     stock_quantity:
       product?.stock_quantity !== undefined &&
       product?.stock_quantity !== null
         ? String(product.stock_quantity)
         : "",
-
     minimum_stock:
       product?.minimum_stock !== undefined &&
       product?.minimum_stock !== null
         ? String(product.minimum_stock)
         : "",
-
-    description:
-      product?.description ?? "",
-
-    image_url:
-      product?.image_url ?? "",
+    description: product?.description ?? "",
+    image_url: product?.image_url ?? "",
   };
+}
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  if (error && typeof error === "object") {
+    const details = error as {
+      message?: string;
+      details?: string;
+      hint?: string;
+      code?: string;
+    };
+
+    const parts = [
+      details.message,
+      details.details,
+      details.hint,
+      details.code ? `Code: ${details.code}` : undefined,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(" — ");
+    }
+  }
+
+  return fallback;
 }
 
 function ProductForm({
@@ -69,29 +89,22 @@ function ProductForm({
 }: ProductFormProps) {
   const isEditMode = Boolean(product);
 
-  const [formValues, setFormValues] =
-    useState<FormValues>(() =>
-      getInitialFormValues(product),
-    );
+  const [formValues, setFormValues] = useState<FormValues>(
+    () => getInitialFormValues(product),
+  );
 
-  const [errors, setErrors] =
-    useState<FormErrors>({});
-
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
-
-  const [submitError, setSubmitError] =
-    useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(
+    null,
+  );
 
   function handleChange(
-    event: React.ChangeEvent<
-      HTMLInputElement |
-        HTMLTextAreaElement |
-        HTMLSelectElement
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) {
-    const { name, value } =
-      event.target;
+    const { name, value } = event.target;
 
     setFormValues((current) => ({
       ...current,
@@ -109,81 +122,41 @@ function ProductForm({
   function validate(): FormErrors {
     const nextErrors: FormErrors = {};
 
-    const name =
-      formValues.name.trim();
-
-    const categoryId =
-      formValues.category_id;
-
-    const price =
-      Number(formValues.price);
-
-    const stockQuantity =
-      Number(formValues.stock_quantity);
-
-    const minimumStock =
-      Number(formValues.minimum_stock);
-
-    const imageUrl =
-      formValues.image_url.trim();
-
-    /*
-     * Product name
-     */
+    const name = formValues.name.trim();
+    const categoryId = formValues.category_id;
+    const price = Number(formValues.price);
+    const stockQuantity = Number(formValues.stock_quantity);
+    const minimumStock = Number(formValues.minimum_stock);
+    const imageUrl = formValues.image_url.trim();
 
     if (!name) {
-      nextErrors.name =
-        "Product name is required.";
+      nextErrors.name = "Product name is required.";
     } else if (name.length > 150) {
       nextErrors.name =
         "Product name must be 150 characters or less.";
     }
 
-    /*
-     * Category
-     */
-
     if (!categoryId) {
+      nextErrors.category_id = "Category is required.";
+    } else if (
+      !categories.some((category) => category.id === categoryId)
+    ) {
       nextErrors.category_id =
-        "Category is required.";
+        "Please select a valid category.";
     }
-
-    /*
-     * Price
-     */
 
     if (!formValues.price.trim()) {
-      nextErrors.price =
-        "Price is required.";
-    } else if (
-      !Number.isFinite(price) ||
-      price <= 0
-    ) {
-      nextErrors.price =
-        "Price must be greater than 0.";
+      nextErrors.price = "Price is required.";
+    } else if (!Number.isFinite(price) || price <= 0) {
+      nextErrors.price = "Price must be greater than 0.";
     }
 
-    /*
-     * Stock quantity
-     *
-     * Only validate this as user input when
-     * creating a product.
-     *
-     * During edit, the current stock comes
-     * from the existing product and is not
-     * being adjusted here.
-     */
-
     if (!isEditMode) {
-      if (
-        !formValues.stock_quantity.trim()
-      ) {
+      if (!formValues.stock_quantity.trim()) {
         nextErrors.stock_quantity =
-          "Stock quantity is required.";
+          "Initial stock quantity is required.";
       } else if (
-        !Number.isInteger(
-          stockQuantity,
-        ) ||
+        !Number.isInteger(stockQuantity) ||
         stockQuantity < 0
       ) {
         nextErrors.stock_quantity =
@@ -191,132 +164,80 @@ function ProductForm({
       }
     }
 
-    /*
-     * Minimum stock
-     */
-
-    if (
-      !formValues.minimum_stock.trim()
-    ) {
-      nextErrors.minimum_stock =
-        "Minimum stock is required.";
+    if (!formValues.minimum_stock.trim()) {
+      nextErrors.minimum_stock = "Minimum stock is required.";
     } else if (
-      !Number.isInteger(
-        minimumStock,
-      ) ||
+      !Number.isInteger(minimumStock) ||
       minimumStock < 0
     ) {
       nextErrors.minimum_stock =
         "Minimum stock must be a whole number of 0 or more.";
     }
 
-    /*
-     * Description
-     */
-
-    if (
-      formValues.description.length >
-      1000
-    ) {
+    if (formValues.description.length > 1000) {
       nextErrors.description =
         "Description must be 1000 characters or less.";
     }
 
-    /*
-     * Image URL
-     */
+    if (imageUrl) {
+      try {
+        const parsedUrl = new URL(imageUrl);
 
-    if (
-      imageUrl &&
-      !/^https?:\/\/.+/i.test(
-        imageUrl,
-      )
-    ) {
-      nextErrors.image_url =
-        "Image URL must start with http:// or https://.";
+        if (
+          parsedUrl.protocol !== "http:" &&
+          parsedUrl.protocol !== "https:"
+        ) {
+          nextErrors.image_url =
+            "Image URL must use HTTP or HTTPS.";
+        }
+      } catch {
+        nextErrors.image_url = "Enter a valid image URL.";
+      }
     }
 
     return nextErrors;
   }
 
   async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
+    event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
-    const validationErrors =
-      validate();
+    if (isSubmitting) {
+      return;
+    }
 
-    if (
-      Object.keys(
-        validationErrors,
-      ).length > 0
-    ) {
-      setErrors(validationErrors);
+    const validationErrors = validate();
+
+    setErrors(validationErrors);
+    setSubmitError(null);
+
+    if (Object.keys(validationErrors).length > 0) {
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitError(null);
 
     try {
-      /*
-       * Common product information.
-       */
-
       const productData = {
         name: formValues.name.trim(),
-
-        category_id:
-          formValues.category_id,
-
-        price:
-          Number(formValues.price),
-
-        minimum_stock:
-          Number(
-            formValues.minimum_stock,
-          ),
-
-        description:
-          formValues.description.trim(),
-
-        image_url:
-          formValues.image_url.trim(),
+        category_id: formValues.category_id,
+        price: Number(formValues.price),
+        minimum_stock: Number(formValues.minimum_stock),
+        description: formValues.description.trim(),
+        image_url: formValues.image_url.trim(),
       };
-
-      /*
-       * CREATE
-       *
-       * Initial stock is allowed here.
-       */
-
-      if (!product) {
-        await createProduct({
-          ...productData,
-          stock_quantity:
-            Number(
-              formValues.stock_quantity,
-            ),
-        });
-      }
-
-      /*
-       * UPDATE
-       *
-       * Do NOT change stock quantity here.
-       *
-       * Current stock belongs to Inventory.
-       */
 
       if (product) {
         await updateProduct({
           id: product.id,
-
           ...productData,
-
-          stock_quantity:
-            product.stock_quantity,
+          stock_quantity: product.stock_quantity,
+        });
+      } else {
+        await createProduct({
+          ...productData,
+          stock_quantity: Number(formValues.stock_quantity),
         });
       }
 
@@ -329,58 +250,51 @@ function ProductForm({
         error,
       );
 
-      if (
-        error &&
-        typeof error === "object"
-      ) {
-        const supabaseError =
-          error as {
-            message?: string;
-            details?: string;
-            hint?: string;
-            code?: string;
-          };
-
-        setSubmitError(
-          [
-            supabaseError.message,
-            supabaseError.details,
-            supabaseError.hint,
-            supabaseError.code
-              ? `Code: ${supabaseError.code}`
-              : undefined,
-          ]
-            .filter(Boolean)
-            .join(" — ") ||
-            (isEditMode
-              ? "Failed to update product."
-              : "Failed to create product."),
-        );
-      } else {
-        setSubmitError(
+      setSubmitError(
+        getErrorMessage(
+          error,
           isEditMode
             ? "Failed to update product."
             : "Failed to create product.",
-        );
-      }
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      noValidate
-    >
-      <div className="grid gap-5 md:grid-cols-2">
-        {/* Product name */}
+  const inputClassName =
+    "mt-1.5 block min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 sm:text-sm";
 
-        <div className="md:col-span-2">
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-slate-700"
-          >
+  const labelClassName =
+    "block text-sm font-medium text-slate-700";
+
+  function errorClass(field: keyof FormValues) {
+    return errors[field]
+      ? "border-red-400 focus:border-red-500 focus:ring-red-100"
+      : "";
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      {categories.length === 0 && (
+        <div
+          role="status"
+          className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+        >
+          <p className="font-semibold">
+            No categories available
+          </p>
+          <p className="mt-1">
+            Create a category before adding a product.
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-x-5 gap-y-5 sm:grid-cols-2">
+        {/* Product name */}
+        <div className="min-w-0 sm:col-span-2">
+          <label htmlFor="name" className={labelClassName}>
             Product name
           </label>
 
@@ -393,23 +307,25 @@ function ProductForm({
             maxLength={150}
             required
             autoComplete="off"
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? "name-error" : undefined}
             placeholder="e.g. Nike T-Shirt"
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className={`${inputClassName} ${errorClass("name")}`}
           />
 
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600">
+            <p id="name-error" className="mt-1.5 text-sm text-red-600">
               {errors.name}
             </p>
           )}
         </div>
 
         {/* Category */}
-
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="category_id"
-            className="block text-sm font-medium text-slate-700"
+            className={labelClassName}
           >
             Category
           </label>
@@ -417,43 +333,40 @@ function ProductForm({
           <select
             id="category_id"
             name="category_id"
-            value={
-              formValues.category_id
-            }
+            value={formValues.category_id}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            disabled={isSubmitting || categories.length === 0}
+            aria-invalid={Boolean(errors.category_id)}
+            aria-describedby={
+              errors.category_id
+                ? "category_id-error"
+                : undefined
+            }
+            className={`${inputClassName} ${errorClass("category_id")}`}
           >
-            <option value="">
-              Select a category
-            </option>
+            <option value="">Select a category</option>
 
-            {categories.map(
-              (category) => (
-                <option
-                  key={category.id}
-                  value={category.id}
-                >
-                  {category.name}
-                </option>
-              ),
-            )}
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
           </select>
 
           {errors.category_id && (
-            <p className="mt-1 text-sm text-red-600">
+            <p
+              id="category_id-error"
+              className="mt-1.5 text-sm text-red-600"
+            >
               {errors.category_id}
             </p>
           )}
         </div>
 
         {/* Price */}
-
-        <div>
-          <label
-            htmlFor="price"
-            className="block text-sm font-medium text-slate-700"
-          >
+        <div className="min-w-0">
+          <label htmlFor="price" className={labelClassName}>
             Price (EGP)
           </label>
 
@@ -461,33 +374,33 @@ function ProductForm({
             id="price"
             name="price"
             type="number"
-            min="0"
+            min="0.01"
             step="0.01"
+            inputMode="decimal"
             value={formValues.price}
             onChange={handleChange}
             required
-            inputMode="decimal"
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.price)}
+            aria-describedby={errors.price ? "price-error" : undefined}
             placeholder="0.00"
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className={`${inputClassName} ${errorClass("price")}`}
           />
 
           {errors.price && (
-            <p className="mt-1 text-sm text-red-600">
+            <p id="price-error" className="mt-1.5 text-sm text-red-600">
               {errors.price}
             </p>
           )}
         </div>
 
         {/* Stock */}
-
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="stock_quantity"
-            className="block text-sm font-medium text-slate-700"
+            className={labelClassName}
           >
-            {isEditMode
-              ? "Current stock"
-              : "Initial stock"}
+            {isEditMode ? "Current stock" : "Initial stock"}
           </label>
 
           <input
@@ -496,30 +409,40 @@ function ProductForm({
             type="number"
             min="0"
             step="1"
-            value={
-              formValues.stock_quantity
-            }
+            inputMode="numeric"
+            value={formValues.stock_quantity}
             onChange={handleChange}
             required={!isEditMode}
-            disabled={isEditMode}
-            readOnly={isEditMode}
-            inputMode="numeric"
-            placeholder="0"
-            className={`mt-1 block w-full rounded-md border px-3 py-2 outline-none focus:ring-2 ${
+            disabled={isEditMode || isSubmitting}
+            aria-invalid={Boolean(errors.stock_quantity)}
+            aria-describedby={
               isEditMode
-                ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
-                : "border-slate-300 bg-white focus:border-slate-500 focus:ring-slate-200"
+                ? "stock-help"
+                : errors.stock_quantity
+                  ? "stock_quantity-error"
+                  : undefined
+            }
+            placeholder="0"
+            className={`${inputClassName} ${
+              isEditMode
+                ? "cursor-not-allowed bg-slate-100"
+                : errorClass("stock_quantity")
             }`}
           />
 
           {isEditMode ? (
-            <p className="mt-1 text-xs text-slate-500">
-              To change current stock, use
-              Inventory → Adjust Stock.
+            <p
+              id="stock-help"
+              className="mt-1.5 text-xs leading-5 text-slate-500"
+            >
+              To change current stock, use Inventory → Adjust Stock.
             </p>
           ) : (
             errors.stock_quantity && (
-              <p className="mt-1 text-sm text-red-600">
+              <p
+                id="stock_quantity-error"
+                className="mt-1.5 text-sm text-red-600"
+              >
                 {errors.stock_quantity}
               </p>
             )
@@ -527,11 +450,10 @@ function ProductForm({
         </div>
 
         {/* Minimum stock */}
-
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="minimum_stock"
-            className="block text-sm font-medium text-slate-700"
+            className={labelClassName}
           >
             Minimum stock
           </label>
@@ -542,74 +464,84 @@ function ProductForm({
             type="number"
             min="0"
             step="1"
-            value={
-              formValues.minimum_stock
-            }
+            inputMode="numeric"
+            value={formValues.minimum_stock}
             onChange={handleChange}
             required
-            inputMode="numeric"
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.minimum_stock)}
+            aria-describedby={
+              errors.minimum_stock
+                ? "minimum_stock-error"
+                : undefined
+            }
             placeholder="0"
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className={`${inputClassName} ${errorClass("minimum_stock")}`}
           />
 
           {errors.minimum_stock && (
-            <p className="mt-1 text-sm text-red-600">
+            <p
+              id="minimum_stock-error"
+              className="mt-1.5 text-sm text-red-600"
+            >
               {errors.minimum_stock}
             </p>
           )}
         </div>
 
         {/* Description */}
+        <div className="min-w-0 sm:col-span-2">
+          <div className="flex items-center justify-between gap-3">
+            <label
+              htmlFor="description"
+              className={labelClassName}
+            >
+              Description
+              <span className="ml-1 font-normal text-slate-400">
+                (optional)
+              </span>
+            </label>
 
-        <div className="md:col-span-2">
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-slate-700"
-          >
-            Description
-
-            <span className="ml-1 font-normal text-slate-400">
-              (optional)
+            <span className="shrink-0 text-xs text-slate-400">
+              {formValues.description.length}/1000
             </span>
-          </label>
+          </div>
 
           <textarea
             id="description"
             name="description"
-            rows={3}
+            rows={4}
             maxLength={1000}
-            value={
-              formValues.description
-            }
+            value={formValues.description}
             onChange={handleChange}
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.description)}
+            aria-describedby={
+              errors.description
+                ? "description-error"
+                : undefined
+            }
             placeholder="Short description of the product"
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className={`${inputClassName} min-h-24 resize-y`}
           />
 
-          <div className="mt-1 text-right text-xs text-slate-400">
-            {
-              formValues.description
-                .length
-            }
-            /1000
-          </div>
-
           {errors.description && (
-            <p className="mt-1 text-sm text-red-600">
+            <p
+              id="description-error"
+              className="mt-1.5 text-sm text-red-600"
+            >
               {errors.description}
             </p>
           )}
         </div>
 
         {/* Image URL */}
-
-        <div className="md:col-span-2">
+        <div className="min-w-0 sm:col-span-2">
           <label
             htmlFor="image_url"
-            className="block text-sm font-medium text-slate-700"
+            className={labelClassName}
           >
             Image URL
-
             <span className="ml-1 font-normal text-slate-400">
               (optional)
             </span>
@@ -619,56 +551,64 @@ function ProductForm({
             id="image_url"
             name="image_url"
             type="url"
-            value={
-              formValues.image_url
-            }
+            inputMode="url"
+            value={formValues.image_url}
             onChange={handleChange}
+            disabled={isSubmitting}
+            aria-invalid={Boolean(errors.image_url)}
+            aria-describedby={
+              errors.image_url ? "image_url-error" : undefined
+            }
             placeholder="https://example.com/product.jpg"
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className={`${inputClassName} ${errorClass("image_url")}`}
           />
 
           {errors.image_url && (
-            <p className="mt-1 text-sm text-red-600">
+            <p
+              id="image_url-error"
+              className="mt-1.5 text-sm text-red-600"
+            >
               {errors.image_url}
             </p>
           )}
         </div>
       </div>
 
-      {/* Submit error */}
-
+      {/* Submission error */}
       {submitError && (
         <div
           role="alert"
-          className="mt-5 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
         >
-          <p className="font-medium">
+          <p className="font-semibold">
             {isEditMode
               ? "Failed to update product."
               : "Failed to create product."}
           </p>
-
-          <p className="mt-1">
-            {submitError}
-          </p>
+          <p className="mt-1 break-words">{submitError}</p>
         </div>
       )}
 
-      {/* Submit */}
-
-      <div className="mt-6 flex justify-end">
+      {/* Submit button */}
+      <div className="mt-6 border-t border-slate-100 pt-5">
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isSubmitting || categories.length === 0}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
-          {isSubmitting
-            ? isEditMode
-              ? "Updating..."
-              : "Saving..."
-            : isEditMode
-              ? "Update Product"
-              : "Save Product"}
+          {isSubmitting ? (
+            <>
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                aria-hidden="true"
+              />
+              {isEditMode ? "Updating..." : "Saving..."}
+            </>
+          ) : isEditMode ? (
+            "Update Product"
+          ) : (
+            "Save Product"
+          )}
         </button>
       </div>
     </form>

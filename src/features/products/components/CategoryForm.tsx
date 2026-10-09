@@ -1,8 +1,12 @@
+
 import { useState } from "react";
+import type { FormEvent } from "react";
+
 import {
   createCategory,
   updateCategory,
 } from "../services/categoryService";
+
 import type { Category } from "../types/product";
 
 type CategoryFormProps = {
@@ -11,6 +15,33 @@ type CategoryFormProps = {
   onCancel: () => void;
 };
 
+function getErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  if (error && typeof error === "object") {
+    const details = error as {
+      message?: string;
+      details?: string;
+      hint?: string;
+      code?: string;
+    };
+
+    const parts = [
+      details.message,
+      details.details,
+      details.hint,
+      details.code ? `Code: ${details.code}` : undefined,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(" — ");
+    }
+  }
+
+  return fallback;
+}
+
 function CategoryForm({
   category,
   onSuccess,
@@ -18,16 +49,9 @@ function CategoryForm({
 }: CategoryFormProps) {
   const isEditMode = Boolean(category);
 
-  const [name, setName] = useState(
-    category?.name ?? "",
-  );
-
-  const [error, setError] = useState<string | null>(
-    null,
-  );
-
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [name, setName] = useState(category?.name ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): string | null {
     const trimmedName = name.trim();
@@ -44,9 +68,13 @@ function CategoryForm({
   }
 
   async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
+    event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     const validationError = validate();
 
@@ -81,36 +109,14 @@ function CategoryForm({
         error,
       );
 
-      if (error && typeof error === "object") {
-        const supabaseError = error as {
-          message?: string;
-          details?: string;
-          hint?: string;
-          code?: string;
-        };
-
-        setError(
-          [
-            supabaseError.message,
-            supabaseError.details,
-            supabaseError.hint,
-            supabaseError.code
-              ? `Code: ${supabaseError.code}`
-              : undefined,
-          ]
-            .filter(Boolean)
-            .join(" — ") ||
-            (isEditMode
-              ? "Failed to update category."
-              : "Failed to create category."),
-        );
-      } else {
-        setError(
+      setError(
+        getErrorMessage(
+          error,
           isEditMode
-            ? "Failed to update category."
-            : "Failed to create category.",
-        );
-      }
+            ? "Failed to update category. Please try again."
+            : "Failed to create category. Please try again.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -120,7 +126,7 @@ function CategoryForm({
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="rounded-lg border border-slate-200 bg-white p-6"
+      className="min-w-0"
     >
       <div>
         <label
@@ -132,6 +138,7 @@ function CategoryForm({
 
         <input
           id="category-name"
+          name="name"
           type="text"
           value={name}
           onChange={(event) => {
@@ -142,25 +149,43 @@ function CategoryForm({
           autoComplete="off"
           placeholder="e.g. Electronics"
           disabled={isSubmitting}
-          className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+          required
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "category-name-error" : undefined}
+          className={`mt-1.5 block min-h-11 w-full rounded-lg border bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 sm:text-sm ${
+            error
+              ? "border-red-400 focus:border-red-500 focus:ring-red-100"
+              : "border-slate-300 focus:border-slate-500 focus:ring-slate-200"
+          }`}
         />
+
+        <div className="mt-1.5 flex justify-between gap-3">
+          <p className="text-xs text-slate-500">
+            Use a clear name that helps organize your products.
+          </p>
+
+          <span className="shrink-0 text-xs text-slate-400">
+            {name.length}/100
+          </span>
+        </div>
       </div>
 
       {error && (
         <div
+          id="category-name-error"
           role="alert"
-          className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="mt-4 break-words rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
         >
           {error}
         </div>
       )}
 
-      <div className="mt-6 flex justify-end gap-3">
+      <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           Cancel
         </button>
@@ -168,15 +193,21 @@ function CategoryForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
-          {isSubmitting
-            ? isEditMode
-              ? "Updating..."
-              : "Saving..."
-            : isEditMode
-              ? "Update Category"
-              : "Save Category"}
+          {isSubmitting ? (
+            <>
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                aria-hidden="true"
+              />
+              {isEditMode ? "Updating..." : "Saving..."}
+            </>
+          ) : isEditMode ? (
+            "Update Category"
+          ) : (
+            "Save Category"
+          )}
         </button>
       </div>
     </form>

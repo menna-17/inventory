@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
+
+import { useCallback, useEffect, useState } from "react";
 
 import { getDashboardData } from "../services/dashboardService";
-
-import type {
-  DashboardData,
-} from "../types/dashboard";
+import type { DashboardData } from "../types/dashboard";
 
 const initialData: DashboardData = {
   stats: {
@@ -13,51 +11,50 @@ const initialData: DashboardData = {
     totalSales: 0,
     salesToday: 0,
   },
-
   recentSales: [],
-
   lowStockProducts: [],
 };
 
 export function useDashboard() {
-  const [data, setData] =
-    useState<DashboardData>(
-      initialData,
-    );
+  const [data, setData] = useState<DashboardData>(initialData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [loading, setLoading] =
-    useState(true);
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const dashboardData = await getDashboardData();
+      setData(dashboardData);
+      setError("");
+    } catch (error) {
+      console.error("Failed to load dashboard:", error);
+      setError("Failed to load dashboard data.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const [error, setError] =
-    useState("");
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    await fetchDashboard();
+  }, [fetchDashboard]);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchDashboard() {
+    async function loadInitialDashboard() {
       try {
-        const dashboardData =
-          await getDashboardData();
+        const dashboardData = await getDashboardData();
 
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          setData(dashboardData);
+          setError("");
         }
-
-        setData(dashboardData);
-        setError("");
       } catch (error) {
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          console.error("Failed to load dashboard:", error);
+          setError("Failed to load dashboard data.");
         }
-
-        console.error(
-          "Failed to load dashboard:",
-          error,
-        );
-
-        setError(
-          "Failed to load dashboard data.",
-        );
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -65,7 +62,7 @@ export function useDashboard() {
       }
     }
 
-    fetchDashboard();
+    void loadInitialDashboard();
 
     return () => {
       cancelled = true;
@@ -76,5 +73,6 @@ export function useDashboard() {
     ...data,
     loading,
     error,
+    refetch,
   };
 }

@@ -1,7 +1,17 @@
-import { useEffect, useState } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
 import { getProducts } from "../services/productService";
 import { getCategories } from "../services/categoryService";
-import type { Category, Product } from "../types/product";
+
+import type {
+  Category,
+  Product,
+} from "../types/product";
 
 type UseProductsResult = {
   products: Product[];
@@ -11,23 +21,47 @@ type UseProductsResult = {
   refetch: () => Promise<void>;
 };
 
+function normalizeError(
+  error: unknown,
+  fallback: string,
+): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error(fallback);
+}
+
 export function useProducts(): UseProductsResult {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadProducts = useCallback(async () => {
+    const [productsData, categoriesData] = await Promise.all([
+      getProducts(),
+      getCategories(),
+    ]);
 
-    async function loadProducts() {
+    setProducts(productsData);
+    setCategories(categoriesData);
+  }, []);
+
+  /*
+   * Initial load with unmount protection.
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initializeProducts() {
       try {
         const [productsData, categoriesData] = await Promise.all([
           getProducts(),
           getCategories(),
         ]);
 
-        if (!isMounted) {
+        if (cancelled) {
           return;
         }
 
@@ -35,63 +69,54 @@ export function useProducts(): UseProductsResult {
         setCategories(categoriesData);
         setError(null);
       } catch (error) {
-        console.error("useProducts error:", error);
-
-        if (!isMounted) {
+        if (cancelled) {
           return;
         }
 
-        if (error instanceof Error) {
-          setError(error);
-        } else {
-          setError(
-            new Error(
-              `Unknown error: ${JSON.stringify(error)}`,
-            ),
-          );
-        }
+        console.error("Initial products load error:", error);
+
+        setError(
+          normalizeError(
+            error,
+            "Failed to load products and categories.",
+          ),
+        );
       } finally {
-        if (isMounted) {
+        if (!cancelled) {
           setIsLoading(false);
         }
       }
     }
 
-    void loadProducts();
+    void initializeProducts();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
   }, []);
 
-  async function refetch() {
+  /*
+   * Refresh products and categories.
+   */
+  const refetch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const [productsData, categoriesData] = await Promise.all([
-        getProducts(),
-        getCategories(),
-      ]);
-
-      setProducts(productsData);
-      setCategories(categoriesData);
+      await loadProducts();
     } catch (error) {
-      console.error("useProducts refetch error:", error);
+      console.error("Products refresh error:", error);
 
-      if (error instanceof Error) {
-        setError(error);
-      } else {
-        setError(
-          new Error(
-            `Unknown error: ${JSON.stringify(error)}`,
-          ),
-        );
-      }
+      setError(
+        normalizeError(
+          error,
+          "Failed to refresh products and categories.",
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [loadProducts]);
 
   return {
     products,

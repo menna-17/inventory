@@ -1,3 +1,4 @@
+
 import {
   useCallback,
   useEffect,
@@ -17,133 +18,71 @@ import type {
   Sale,
 } from "../types/sales";
 
-/*
- * -------------------------------------------------------
- * Helper
- * -------------------------------------------------------
- */
-
 async function fetchSalesData(): Promise<{
   sales: Sale[];
   products: Product[];
 }> {
-  const [salesData, productsData] =
-    await Promise.all([
-      getSales(),
-      getProducts(),
-    ]);
+  const [sales, products] = await Promise.all([
+    getSales(),
+    getProducts(),
+  ]);
 
-  return {
-    sales: salesData,
-    products: productsData,
-  };
+  return { sales, products };
 }
 
-/*
- * -------------------------------------------------------
- * useSales
- * -------------------------------------------------------
- */
+function getErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  return error instanceof Error
+    ? error.message
+    : fallback;
+}
 
 export function useSales() {
-  const [sales, setSales] = useState<Sale[]>(
-    [],
-  );
-
-  const [products, setProducts] =
-    useState<Product[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [error, setError] =
-    useState<string | null>(null);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /*
-   * -------------------------------------------------------
-   * Load sales
-   * -------------------------------------------------------
+   * Shared data-loading function.
+   * Throws errors so callers can handle them appropriately.
    */
+  const loadSales = useCallback(async () => {
+    const data = await fetchSalesData();
 
-  const loadSales = useCallback(
-    async () => {
-      try {
-        setError(null);
-
-        const {
-          sales,
-          products,
-        } = await fetchSalesData();
-
-        setSales(sales);
-        setProducts(products);
-      } catch (error) {
-        console.error(
-          "loadSales error:",
-          error,
-        );
-
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError(
-            "Failed to load sales.",
-          );
-        }
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+    setSales(data.sales);
+    setProducts(data.products);
+  }, []);
 
   /*
-   * -------------------------------------------------------
-   * Initial load
-   *
-   * Do not call loadSales() directly inside
-   * the effect. The request is started asynchronously
-   * and state is updated after the request completes.
-   * -------------------------------------------------------
+   * Initial load.
    */
-
   useEffect(() => {
     let cancelled = false;
 
     async function initializeSales() {
       try {
-        const {
-          sales,
-          products,
-        } = await fetchSalesData();
+        const data = await fetchSalesData();
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
-        setSales(sales);
-        setProducts(products);
+        setSales(data.sales);
+        setProducts(data.products);
         setError(null);
       } catch (error) {
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
-        console.error(
-          "Initial sales load error:",
-          error,
-        );
+        console.error("Initial sales load error:", error);
 
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError(
+        setError(
+          getErrorMessage(
+            error,
             "Failed to load sales.",
-          );
-        }
+          ),
+        );
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -159,36 +98,41 @@ export function useSales() {
   }, []);
 
   /*
-   * -------------------------------------------------------
-   * Create sale
-   * -------------------------------------------------------
+   * Refresh sales and products.
    */
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
+    try {
+      await loadSales();
+    } catch (error) {
+      console.error("Refresh sales error:", error);
+
+      setError(
+        getErrorMessage(
+          error,
+          "Failed to refresh sales.",
+        ),
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [loadSales]);
+
+  /*
+   * Create a sale.
+   */
   const submitSale = useCallback(
     async (
       input: CreateSaleInput,
     ): Promise<boolean> => {
-      /*
-       * Clear previous error
-       */
-
       setError(null);
 
-      /*
-       * Validate product
-       */
-
       if (!input.productId) {
-        setError(
-          "Please select a product.",
-        );
-
+        setError("Please select a product.");
         return false;
       }
-
-      /*
-       * Validate quantity
-       */
 
       if (
         !Number.isInteger(input.quantity) ||
@@ -197,77 +141,60 @@ export function useSales() {
         setError(
           "Please enter a valid positive whole number.",
         );
-
         return false;
       }
 
-      /*
-       * Find selected product
-       */
-
-      const selectedProduct =
-        products.find(
-          (product) =>
-            product.id === input.productId,
-        );
+      const selectedProduct = products.find(
+        (product) => product.id === input.productId,
+      );
 
       if (!selectedProduct) {
-        setError(
-          "Selected product was not found.",
-        );
-
+        setError("Selected product was not found.");
         return false;
       }
 
-      /*
-       * Check available stock
-       */
-
       if (
-        input.quantity >
-        selectedProduct.stock_quantity
+        input.quantity > selectedProduct.stock_quantity
       ) {
         setError(
           `Not enough stock. Available stock: ${selectedProduct.stock_quantity}.`,
         );
-
         return false;
       }
-
-      /*
-       * Start saving
-       */
 
       setSaving(true);
 
       try {
-        /*
-         * Create the sale in Supabase.
-         */
-
         await createSale(input);
 
         /*
-         * Refresh sales and products
-         * after the sale is successfully created.
+         * The sale has already been created.
+         * If refreshing fails, report the refresh problem
+         * without claiming the sale itself failed.
          */
+        try {
+          await loadSales();
+        } catch (refreshError) {
+          console.error(
+            "Sale created, but refresh failed:",
+            refreshError,
+          );
 
-        await loadSales();
+          setError(
+            "Sale was created, but the latest data could not be loaded. Please refresh the page.",
+          );
+        }
 
         return true;
       } catch (error) {
-        console.error(
-          "submitSale error:",
-          error,
-        );
+        console.error("Create sale error:", error);
 
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError(
+        setError(
+          getErrorMessage(
+            error,
             "Failed to create sale.",
-          );
-        }
+          ),
+        );
 
         return false;
       } finally {
@@ -277,21 +204,13 @@ export function useSales() {
     [loadSales, products],
   );
 
-  /*
-   * -------------------------------------------------------
-   * Return hook data
-   * -------------------------------------------------------
-   */
-
   return {
     sales,
     products,
     loading,
     saving,
     error,
-
     submitSale,
-
-    refresh: loadSales,
+    refresh,
   };
 }

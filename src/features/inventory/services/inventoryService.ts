@@ -1,3 +1,4 @@
+
 import { supabase } from "../../../lib/supabase";
 
 import type {
@@ -30,7 +31,7 @@ export async function getInventoryItems(): Promise<
     throw error;
   }
 
-  return data ?? [];
+  return (data ?? []) as InventoryItem[];
 }
 
 /*
@@ -40,14 +41,13 @@ export async function getInventoryItems(): Promise<
  *
  * Stock adjustment is handled by the database RPC.
  *
- * The RPC:
- * - checks Owner / Manager permission
- * - validates the movement
- * - calculates the new stock
- * - prevents negative stock
- * - updates the product
- * - records the stock movement
- * - performs the operation atomically
+ * The database function must:
+ * - verify Owner / Manager permissions
+ * - validate the movement type and quantity
+ * - prevent negative stock
+ * - enforce appropriate numeric bounds
+ * - update the product and record the movement
+ *   atomically
  * -------------------------------------------------------
  */
 
@@ -56,14 +56,17 @@ export async function updateStock(
   movementType: StockMovementType,
   movementQuantity: number,
 ): Promise<InventoryItem> {
-  if (!productId) {
-    throw new Error(
-      "Product is required.",
-    );
+  // Validate the product ID.
+  if (
+    typeof productId !== "string" ||
+    productId.trim().length === 0
+  ) {
+    throw new Error("Product is required.");
   }
 
+  // Require a positive, safe whole number.
   if (
-    !Number.isInteger(movementQuantity) ||
+    !Number.isSafeInteger(movementQuantity) ||
     movementQuantity <= 0
   ) {
     throw new Error(
@@ -71,6 +74,7 @@ export async function updateStock(
     );
   }
 
+  // Validate the movement type.
   if (
     movementType !== "add" &&
     movementType !== "remove"
@@ -80,15 +84,8 @@ export async function updateStock(
     );
   }
 
-  /*
-   * Let Supabase/PostgreSQL handle the
-   * stock adjustment.
-   */
-
-  const {
-    data,
-    error,
-  } = await supabase.rpc(
+  // Perform the adjustment through the database RPC.
+  const { data, error } = await supabase.rpc(
     "adjust_stock",
     {
       p_product_id: productId,
@@ -108,7 +105,7 @@ export async function updateStock(
 
   if (!data) {
     throw new Error(
-      "Stock was not updated.",
+      "Stock was not updated. The database returned no product.",
     );
   }
 

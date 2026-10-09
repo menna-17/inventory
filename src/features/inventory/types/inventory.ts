@@ -1,3 +1,4 @@
+
 export type InventoryItem = {
   id: string;
   name: string;
@@ -35,4 +36,19 @@ export type StockMovement = {
   user?: {
     full_name: string | null;
   };
+};
+
+/**
+ * Row returned by the get_stock_movements Supabase RPC.
+ * Keep these fields aligned with the SQL function's RETURNS TABLE.
+ */
+export type StockMovementRpcRow = {
+  id: string;
+  product_id: string;
+  movement_type: string;
+  quantity: number;
+  user_id: string | null;
+  created_at: string;
+  product_name: string | null;
+  user_name: string | null;
 };

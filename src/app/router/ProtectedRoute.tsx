@@ -1,4 +1,10 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+
+import {
+  Navigate,
+  Outlet,
+  useLocation,
+} from "react-router-dom";
+
 import { useAuth } from "../providers/useAuth";
 
 function ProtectedRoute() {
@@ -8,10 +14,20 @@ function ProtectedRoute() {
   if (isLoading) {
     return (
       <main
-        className="flex min-h-screen items-center justify-center"
+        className="flex min-h-screen items-center justify-center bg-slate-50 px-4"
+        aria-busy="true"
         aria-live="polite"
       >
-        <p className="text-slate-600">Loading...</p>
+        <div className="text-center">
+          <div
+            aria-hidden="true"
+            className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800"
+          />
+
+          <p className="mt-4 text-sm font-medium text-slate-600">
+            Loading your account...
+          </p>
+        </div>
       </main>
     );
   }

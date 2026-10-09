@@ -1,3 +1,4 @@
+
 import type { Role } from "./auth-context";
 
 export const rolePermissions = {
@@ -7,6 +8,7 @@ export const rolePermissions = {
     "/categories",
     "/inventory",
     "/sales",
+    "/audit-history",
   ],
 
   manager: [
@@ -32,5 +34,13 @@ export function canAccessRoute(
     return false;
   }
 
-  return rolePermissions[role].includes(path);
+  const normalizedPath =
+    path.length > 1 ? path.replace(/\/+$/, "") : path;
+
+  return rolePermissions[role].some((allowedPath) => {
+    return (
+      normalizedPath === allowedPath ||
+      normalizedPath.startsWith(`${allowedPath}/`)
+    );
+  });
 }

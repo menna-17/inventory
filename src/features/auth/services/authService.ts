@@ -1,4 +1,15 @@
+
 import { supabase } from "../../../lib/supabase";
+
+export type UserRole = "owner" | "manager" | "staff";
+
+function isUserRole(role: unknown): role is UserRole {
+  return (
+    role === "owner" ||
+    role === "manager" ||
+    role === "staff"
+  );
+}
 
 export async function signInWithPassword(
   email: string,
@@ -27,9 +38,8 @@ export async function signInWithPassword(
   return data;
 }
 
-export async function signOut() {
-  const { error } =
-    await supabase.auth.signOut();
+export async function signOut(): Promise<void> {
+  const { error } = await supabase.auth.signOut();
 
   if (error) {
     throw error;
@@ -38,8 +48,11 @@ export async function signOut() {
 
 export async function getCurrentUserRole(
   userId: string,
-): Promise<string> {
-  if (!userId) {
+): Promise<UserRole> {
+  if (
+    typeof userId !== "string" ||
+    userId.trim().length === 0
+  ) {
     throw new Error(
       "Authenticated user was not found.",
     );
@@ -62,9 +75,9 @@ export async function getCurrentUserRole(
     );
   }
 
-  if (!data?.role) {
+  if (!isUserRole(data?.role)) {
     throw new Error(
-      "Your account does not have a role assigned.",
+      "Your account does not have a valid role assigned.",
     );
   }
 
