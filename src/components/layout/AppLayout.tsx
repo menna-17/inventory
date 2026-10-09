@@ -1,3 +1,4 @@
+
 import {
   NavLink,
   Outlet,
@@ -21,9 +22,13 @@ function AppLayout() {
     role === "owner" ||
     role === "manager";
 
+  const canAccessAuditHistory =
+    role === "owner";
+
   async function handleSignOut() {
     try {
       await signOut();
+
       navigate("/login", {
         replace: true,
       });
@@ -65,7 +70,7 @@ function AppLayout() {
         <aside className="w-64 border-r bg-white p-4">
           <nav aria-label="Main navigation">
             <ul className="space-y-1">
-              {/* Dashboard */}
+              {/* Dashboard - All roles */}
               <li>
                 <NavLink
                   to="/dashboard"
@@ -91,11 +96,11 @@ function AppLayout() {
                         isActive
                           ? "bg-slate-900 text-white"
                           : "text-slate-700 hover:bg-slate-100"
-                      }`
-                    }
-                  >
-                    Products
-                  </NavLink>
+                    }`
+                  }
+                >
+                  Products
+                </NavLink>
                 </li>
               )}
 
@@ -110,10 +115,10 @@ function AppLayout() {
                           ? "bg-slate-900 text-white"
                           : "text-slate-700 hover:bg-slate-100"
                       }`
-                    }
-                  >
-                    Categories
-                  </NavLink>
+                  }
+                >
+                  Categories
+                </NavLink>
                 </li>
               )}
 
@@ -148,6 +153,24 @@ function AppLayout() {
                   Sales
                 </NavLink>
               </li>
+
+              {/* Audit History - Owner only */}
+              {canAccessAuditHistory && (
+                <li>
+                  <NavLink
+                    to="/audit-history"
+                    className={({ isActive }) =>
+                      `block rounded-md px-3 py-2 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-700 hover:bg-slate-100"
+                      }`
+                    }
+                  >
+                    Audit History
+                  </NavLink>
+                </li>
+              )}
             </ul>
           </nav>
         </aside>

@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from "react";
 import {
   BrowserRouter,
@@ -55,6 +56,13 @@ const SalesPage = lazy(
     ),
 );
 
+const AuditHistoryPage = lazy(
+  () =>
+    import(
+      "../../features/audit/components/AuditHistoryPage"
+    ),
+);
+
 /*
  * -------------------------------------------------------
  * Login page
@@ -76,24 +84,18 @@ function LoginPage() {
  */
 
 function AppRouter() {
-  /*
-   * Users who can access all operational pages.
-   */
   const allRoles: Role[] = [
     "owner",
     "manager",
     "staff",
   ];
 
-  /*
-   * Users who can manage Products and Categories.
-   *
-   * Staff intentionally does not have access.
-   */
   const managementRoles: Role[] = [
     "owner",
     "manager",
   ];
+
+  const ownerRoles: Role[] = ["owner"];
 
   return (
     <BrowserRouter>
@@ -107,26 +109,19 @@ function AppRouter() {
         }
       >
         <Routes>
-          {/* =================================================
-              Public Routes
-              ================================================= */}
+          {/* Public Routes */}
 
           <Route
             path="/login"
             element={<LoginPage />}
           />
 
-          {/* =================================================
-              Protected Routes
-              ================================================= */}
+          {/* Protected Routes */}
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
 
-              {/* =================================================
-                  Dashboard
-                  Owner + Manager + Staff
-                  ================================================= */}
+              {/* Dashboard: all roles */}
 
               <Route
                 element={
@@ -141,11 +136,7 @@ function AppRouter() {
                 />
               </Route>
 
-              {/* =================================================
-                  Products
-                  Owner + Manager
-                  Staff has no access
-                  ================================================= */}
+              {/* Products and Categories: owner + manager */}
 
               <Route
                 element={
@@ -159,28 +150,13 @@ function AppRouter() {
                   element={<ProductsPage />}
                 />
 
-                {/* =================================================
-                    Categories
-                    Owner + Manager
-                    Staff has no access
-                    ================================================= */}
-
                 <Route
                   path="/categories"
                   element={<CategoriesPage />}
                 />
               </Route>
 
-              {/* =================================================
-                  Inventory
-                  Owner + Manager + Staff
-                  
-                  IMPORTANT:
-                  Staff can view inventory.
-                  Staff will NOT be allowed to adjust stock.
-                  That restriction will be implemented in the
-                  Inventory UI/action layer next.
-                  ================================================= */}
+              {/* Inventory: all roles */}
 
               <Route
                 element={
@@ -195,13 +171,7 @@ function AppRouter() {
                 />
               </Route>
 
-              {/* =================================================
-                  Sales
-                  Owner + Manager + Staff
-
-                  All roles can access Sales because Staff
-                  needs to be able to process sales.
-                  ================================================= */}
+              {/* Sales: all roles */}
 
               <Route
                 element={
@@ -216,12 +186,25 @@ function AppRouter() {
                 />
               </Route>
 
+              {/* Audit History: owner only */}
+
+              <Route
+                element={
+                  <RoleProtectedRoute
+                    allowedRoles={ownerRoles}
+                  />
+                }
+              >
+                <Route
+                  path="/audit-history"
+                  element={<AuditHistoryPage />}
+                />
+              </Route>
+
             </Route>
           </Route>
 
-          {/* =================================================
-              Unknown Routes
-              ================================================= */}
+          {/* Unknown Routes */}
 
           <Route
             path="*"
