@@ -14,11 +14,7 @@ type ProductListProps = {
   canDelete: boolean;
 };
 
-type StockStatus =
-  | "in_stock"
-  | "low_stock"
-  | "out_of_stock";
-
+type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
 type FilterStatus = "all" | StockStatus;
 
 function getStockStatus(product: Product): {
@@ -49,6 +45,52 @@ function getStockStatus(product: Product): {
   };
 }
 
+function ProductImage({
+  src,
+  name,
+  className,
+}: {
+  src?: string | null;
+  name: string;
+  className: string;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageUrl = src?.trim();
+
+  if (!imageUrl || imageFailed) {
+    return (
+      <div
+        role="img"
+        aria-label={`No image available for ${name}`}
+        className={`flex shrink-0 items-center justify-center bg-slate-100 text-slate-400 ${className}`}
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          className="h-8 w-8"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="8.5" cy="9" r="1.5" />
+          <path d="m21 15-5-5L5 20" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt={name}
+      loading="lazy"
+      onError={() => setImageFailed(true)}
+      className={`shrink-0 object-cover ${className}`}
+    />
+  );
+}
+
 function ProductList({
   products,
   categories,
@@ -56,24 +98,16 @@ function ProductList({
   onDelete,
   canDelete,
 }: ProductListProps) {
-  const [deletingId, setDeletingId] = useState<string | null>(
-    null,
-  );
-  const [deleteError, setDeleteError] = useState<string | null>(
-    null,
-  );
-  const [statusFilter, setStatusFilter] =
-    useState<FilterStatus>("all");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
   const categoryNames = useMemo(
     () =>
       new Map(
-        categories.map((category) => [
-          category.id,
-          category.name,
-        ]),
+        categories.map((category) => [category.id, category.name]),
       ),
     [categories],
   );
@@ -115,11 +149,7 @@ function ProductList({
         categoryFilter === "all" ||
         product.category_id === categoryFilter;
 
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesCategory
-      );
+      return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [products, searchTerm, statusFilter, categoryFilter]);
 
@@ -206,7 +236,7 @@ function ProductList({
 
   if (products.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
+      <div className="w-full rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
         <h2 className="text-lg font-semibold text-slate-900">
           No products available
         </h2>
@@ -218,8 +248,7 @@ function ProductList({
   }
 
   return (
-    <div className="min-w-0 space-y-5">
-      {/* Delete error */}
+    <div className="w-full min-w-0 space-y-5">
       {deleteError && (
         <div
           role="alert"
@@ -245,7 +274,7 @@ function ProductList({
       )}
 
       {/* Search and category filters */}
-      <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 sm:p-5">
+      <div className="grid w-full grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 sm:p-5">
         <div className="min-w-0">
           <label
             htmlFor="product-search"
@@ -253,7 +282,6 @@ function ProductList({
           >
             Search products
           </label>
-
           <input
             id="product-search"
             type="search"
@@ -271,7 +299,6 @@ function ProductList({
           >
             Category
           </label>
-
           <select
             id="category-filter"
             value={categoryFilter}
@@ -279,7 +306,6 @@ function ProductList({
             className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
           >
             <option value="all">All Categories</option>
-
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -290,11 +316,10 @@ function ProductList({
       </div>
 
       {/* Stock status filters */}
-      <div>
+      <div className="w-full">
         <p className="mb-2 text-sm font-medium text-slate-700">
           Filter by stock status
         </p>
-
         <div className="flex flex-wrap gap-2">
           {statusFilters.map((filter) => {
             const active = statusFilter === filter.value;
@@ -319,11 +344,8 @@ function ProductList({
       </div>
 
       {/* Results summary */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p
-          className="text-sm text-slate-500"
-          aria-live="polite"
-        >
+      <div className="flex w-full flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-slate-500" aria-live="polite">
           Showing{" "}
           <span className="font-semibold text-slate-800">
             {filteredProducts.length}
@@ -346,16 +368,15 @@ function ProductList({
         )}
       </div>
 
-      {/* No matching results */}
+      {/* Product results */}
       {filteredProducts.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
+        <div className="w-full rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
           <h2 className="text-lg font-semibold text-slate-900">
             No matching products
           </h2>
           <p className="mt-2 text-sm text-slate-600">
             Try changing your search or filters.
           </p>
-
           <button
             type="button"
             onClick={clearFilters}
@@ -367,7 +388,7 @@ function ProductList({
       ) : (
         <>
           {/* Mobile product cards */}
-          <div className="grid grid-cols-1 gap-3 md:hidden">
+          <div className="grid w-full grid-cols-1 gap-3 md:hidden">
             {filteredProducts.map((product) => {
               const stockStatus = getStockStatus(product);
               const isDeleting = deletingId === product.id;
@@ -377,53 +398,50 @@ function ProductList({
                   key={product.id}
                   className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="break-words font-semibold text-slate-900">
-                        {product.name}
-                      </h3>
+                  <div className="flex items-start gap-3">
+                    <ProductImage
+                      src={product.image_url}
+                      name={product.name}
+                      className="h-24 w-20 rounded-lg border border-slate-200"
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h3 className="break-words font-semibold text-slate-900">
+                          {product.name}
+                        </h3>
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${stockStatus.className}`}
+                        >
+                          {stockStatus.label}
+                        </span>
+                      </div>
 
                       <p className="mt-1 break-words text-sm text-slate-500">
                         {getCategoryName(product.category_id)}
                       </p>
-                    </div>
 
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${stockStatus.className}`}
-                    >
-                      {stockStatus.label}
-                    </span>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">
+                        {Number(product.price).toFixed(2)} EGP
+                      </p>
+                    </div>
                   </div>
 
-                  {product.description && (
+                  {product.description?.trim() && (
                     <p className="mt-3 break-words text-sm leading-5 text-slate-600">
                       {product.description}
                     </p>
                   )}
 
                   <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3">
-                    <div className="min-w-0">
-                      <p className="text-xs text-slate-500">
-                        Price
-                      </p>
-                      <p className="mt-1 break-words text-sm font-semibold text-slate-900">
-                        {Number(product.price).toFixed(2)} EGP
-                      </p>
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="text-xs text-slate-500">
-                        Current stock
-                      </p>
+                    <div>
+                      <p className="text-xs text-slate-500">Current stock</p>
                       <p className="mt-1 text-sm font-semibold text-slate-900">
                         {product.stock_quantity}
                       </p>
                     </div>
-
-                    <div className="min-w-0">
-                      <p className="text-xs text-slate-500">
-                        Minimum stock
-                      </p>
+                    <div>
+                      <p className="text-xs text-slate-500">Minimum stock</p>
                       <p className="mt-1 text-sm text-slate-700">
                         {product.minimum_stock}
                       </p>
@@ -457,11 +475,17 @@ function ProductList({
           </div>
 
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white md:block">
-            <div className="overflow-x-auto">
-              <table className="min-w-[900px] divide-y divide-slate-200">
+          <div className="hidden w-full min-w-0 rounded-xl border border-slate-200 bg-white md:block">
+            <div className="w-full overflow-x-auto rounded-xl">
+              <table className="w-full min-w-[1000px] table-fixed divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
+                    <th
+                      scope="col"
+                      className="w-28 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600"
+                    >
+                      Image
+                    </th>
                     <th
                       scope="col"
                       className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600"
@@ -470,37 +494,37 @@ function ProductList({
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-40 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       Category
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-36 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       Price
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-24 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       Stock
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-36 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       Status
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-28 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       Minimum
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-44 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
                     >
                       Actions
                     </th>
@@ -517,19 +541,26 @@ function ProductList({
                         key={product.id}
                         className="transition hover:bg-slate-50"
                       >
-                        <td className="max-w-sm px-5 py-4">
+                        <td className="px-5 py-4">
+                          <ProductImage
+                            src={product.image_url}
+                            name={product.name}
+                            className="h-16 w-14 rounded-md border border-slate-200"
+                          />
+                        </td>
+
+                        <td className="min-w-0 px-5 py-4">
                           <p className="break-words font-medium text-slate-900">
                             {product.name}
                           </p>
-
-                          {product.description && (
+                          {product.description?.trim() && (
                             <p className="mt-1 break-words text-sm text-slate-500">
                               {product.description}
                             </p>
                           )}
                         </td>
 
-                        <td className="px-5 py-4 text-sm text-slate-600">
+                        <td className="break-words px-5 py-4 text-sm text-slate-600">
                           {getCategoryName(product.category_id)}
                         </td>
 

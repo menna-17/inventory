@@ -263,16 +263,32 @@ export async function deleteProduct(id: string): Promise<void> {
     throw new Error("Product is required.");
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("products")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
 
   if (error) {
-    console.error("deleteProduct error:", error);
+    console.error("deleteProduct error:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
 
     throw new Error(
-      "Unable to delete the product. It may be in use or you may not have permission.",
+      `Unable to delete product: ${error.message}`,
+    );
+  }
+
+  if (!data || data.length === 0) {
+    console.error(
+      "Product deletion affected no rows. Check the product ID and DELETE RLS policy.",
+    );
+
+    throw new Error(
+      "The product was not deleted. It may not exist, or your database permissions may prevent deletion.",
     );
   }
 }

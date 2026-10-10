@@ -151,13 +151,34 @@ export async function deleteCategory(
     throw new Error("Category ID is required.");
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("categories")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
 
   if (error) {
-    console.error("deleteCategory Supabase error:", error);
-    throw error;
+    console.error("deleteCategory Supabase error:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    if (error.code === "23503") {
+      throw new Error(
+        "This category cannot be deleted because it is referenced by existing records. Remove or reassign its products first.",
+      );
+    }
+
+    throw new Error(
+      `Failed to delete category: ${error.message}`,
+    );
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error(
+      "The category was not deleted. It may not exist, or your database permissions may prevent deletion.",
+    );
   }
 }
