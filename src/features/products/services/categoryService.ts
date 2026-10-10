@@ -11,6 +11,9 @@ type UpdateCategoryInput = {
   name: string;
 };
 
+const DUPLICATE_CATEGORY_MESSAGE =
+  "A category with this name already exists. Please choose another name.";
+
 function validateCategoryName(name: string): string {
   const trimmedName = name.trim();
 
@@ -25,6 +28,45 @@ function validateCategoryName(name: string): string {
   }
 
   return trimmedName;
+}
+
+function isDuplicateError(error: { code?: string }): boolean {
+  return error.code === "23505";
+}
+
+async function ensureUniqueCategoryName(
+  name: string,
+  excludeCategoryId?: string,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name");
+
+  if (error) {
+    console.error(
+      "Category uniqueness check failed:",
+      error,
+    );
+    throw new Error(
+      "Unable to validate the category name. Please try again.",
+    );
+  }
+
+  const normalizedName = name.trim().toLowerCase();
+
+  const duplicate = (data ?? []).some((category) => {
+    if (category.id === excludeCategoryId) {
+      return false;
+    }
+
+    return (
+      category.name.trim().toLowerCase() === normalizedName
+    );
+  });
+
+  if (duplicate) {
+    throw new Error(DUPLICATE_CATEGORY_MESSAGE);
+  }
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -46,6 +88,8 @@ export async function createCategory(
 ): Promise<Category> {
   const name = validateCategoryName(input.name);
 
+  await ensureUniqueCategoryName(name);
+
   const { data, error } = await supabase
     .from("categories")
     .insert({ name })
@@ -54,7 +98,14 @@ export async function createCategory(
 
   if (error) {
     console.error("createCategory Supabase error:", error);
-    throw error;
+
+    if (isDuplicateError(error)) {
+      throw new Error(DUPLICATE_CATEGORY_MESSAGE);
+    }
+
+    throw new Error(
+      "Failed to create category. Please try again.",
+    );
   }
 
   return data;
@@ -69,6 +120,8 @@ export async function updateCategory(
 
   const name = validateCategoryName(input.name);
 
+  await ensureUniqueCategoryName(name, input.id);
+
   const { data, error } = await supabase
     .from("categories")
     .update({ name })
@@ -78,7 +131,14 @@ export async function updateCategory(
 
   if (error) {
     console.error("updateCategory Supabase error:", error);
-    throw error;
+
+    if (isDuplicateError(error)) {
+      throw new Error(DUPLICATE_CATEGORY_MESSAGE);
+    }
+
+    throw new Error(
+      "Failed to update category. Please try again.",
+    );
   }
 
   return data;

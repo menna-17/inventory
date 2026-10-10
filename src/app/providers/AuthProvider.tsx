@@ -108,13 +108,17 @@ export function AuthProvider({
 
   useEffect(() => {
     let isCurrent = true;
-    const userId = session?.user.id;
 
-    if (!userId) {
+    const currentUserId = session?.user.id;
+
+    if (!currentUserId) {
       return () => {
         isCurrent = false;
       };
     }
+
+    // After the guard, use a definite string for service calls.
+    const userId: string = currentUserId;
 
     async function loadRole() {
       try {
