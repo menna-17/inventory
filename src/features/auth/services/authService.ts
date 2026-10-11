@@ -83,3 +83,42 @@ export async function getCurrentUserRole(
 
   return data.role;
 }
+
+export async function getCurrentUserName(
+  userId: string,
+): Promise<string | null> {
+  if (
+    typeof userId !== "string" ||
+    userId.trim().length === 0
+  ) {
+    throw new Error(
+      "Authenticated user was not found.",
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "getCurrentUserName Supabase error:",
+      error,
+    );
+
+    throw new Error(
+      "Unable to load your user name.",
+    );
+  }
+
+  if (
+    typeof data?.full_name === "string" &&
+    data.full_name.trim().length > 0
+  ) {
+    return data.full_name.trim();
+  }
+
+  return null;
+}

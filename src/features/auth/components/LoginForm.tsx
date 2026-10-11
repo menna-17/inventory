@@ -43,11 +43,11 @@ function LoginForm() {
       className="w-full max-w-md space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-3xl font-bold text-mauve-600">
           Sign in
         </h1>
 
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-mauve-600">
           Sign in to your inventory account.
         </p>
       </div>
@@ -55,7 +55,7 @@ function LoginForm() {
       <div>
         <label
           htmlFor="email"
-          className="mb-2 block text-sm font-medium text-slate-700"
+          className="mb-2 block text-md font-medium text-teal-900"
         >
           Email address
         </label>
@@ -70,19 +70,19 @@ function LoginForm() {
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          aria-invalid={Boolean(errorMessage)}
+          aria-invalid="false"
           aria-describedby={
             errorMessage ? "login-error" : undefined
           }
           disabled={isSubmitting}
-          className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+          className="min-h-11 w-full rounded-lg border border-mauve-600 px-3 py-2 text-base outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-600 disabled:cursor-not-allowed disabled:bg-olive-50 "
         />
       </div>
 
       <div>
         <label
           htmlFor="password"
-          className="mb-2 block text-sm font-medium text-slate-700"
+          className="mb-2 block text-md font-medium text-teal-900"
         >
           Password
         </label>
@@ -95,12 +95,12 @@ function LoginForm() {
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          aria-invalid={Boolean(errorMessage)}
+          aria-invalid="false"
           aria-describedby={
             errorMessage ? "login-error" : undefined
           }
           disabled={isSubmitting}
-          className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+          className="min-h-11 w-full rounded-lg border border-mauve-600  px-3 py-2 text-base outline-none transition focus:border-mauve-600  focus:ring-2 focus:ring-mauve-600  disabled:cursor-not-allowed disabled:bg-olive-50 "
         />
       </div>
 
@@ -118,7 +118,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex min-h-11 w-full items-center justify-center rounded-lg bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex min-h-11 w-full items-center justify-center rounded-lg bg-mauve-600  px-4 py-2 font-medium text-olive-50 transition hover:bg-mauve-700 focus:outline-none focus:ring-2 focus:ring-mauve-600  focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSubmitting ? "Signing in..." : "Sign in"}
       </button>

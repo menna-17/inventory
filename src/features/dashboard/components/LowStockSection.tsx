@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../app/providers/useAuth";
@@ -25,15 +24,15 @@ function LowStockSection({
   }
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="min-w-0 overflow-hidden rounded-xl border border-olive-100 bg-olive-100 shadow-sm">
       {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div className="flex flex-col gap-3 border-b border-olive-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-xl font-bold text-mauve-600">
             Low Stock
           </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-mauve-600">
             Products that need attention.
           </p>
         </div>
@@ -49,14 +48,14 @@ function LowStockSection({
       {/* Empty state */}
       {products.length === 0 ? (
         <div className="px-4 py-10 text-center sm:px-6">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-teal-900">
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
-              className="h-6 w-6 text-emerald-600"
+              className="h-6 w-6 text-olive-50"
             >
               <path
                 strokeLinecap="round"
@@ -66,25 +65,25 @@ function LowStockSection({
             </svg>
           </div>
 
-          <h3 className="mt-3 text-sm font-semibold text-slate-900">
+          <h3 className="mt-3 text-sm font-semibold text-mauve-600">
             All stock levels look good
           </h3>
 
-          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
-            There are no products currently below their minimum stock level.
+          <p className="mx-auto mt-1 max-w-sm text-sm text-mauve-600">
+            There are no products currently at or below their minimum stock level.
           </p>
         </div>
       ) : (
         <>
           {/* Mobile-friendly product cards */}
-          <div className="divide-y divide-slate-100 md:hidden">
+          <div className="divide-y divide-olive-100 md:hidden">
             {products.map((product) => (
               <article
                 key={product.id}
                 className="space-y-3 p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 break-words font-medium text-slate-900">
+                  <h3 className="min-w-0 break-words font-medium text-mauve-600">
                     {product.name}
                   </h3>
 
@@ -94,20 +93,22 @@ function LowStockSection({
                 </div>
 
                 <dl className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-slate-50 p-3">
-                    <dt className="text-xs text-slate-500">
+                  <div className="rounded-lg bg-olive-100 p-3">
+                    <dt className="text-xs text-teal-900">
                       Current stock
                     </dt>
-                    <dd className="mt-1 text-lg font-semibold text-slate-900">
+
+                    <dd className="mt-1 text-lg font-semibold text-mauve-600">
                       {product.stock_quantity}
                     </dd>
                   </div>
 
-                  <div className="rounded-lg bg-slate-50 p-3">
-                    <dt className="text-xs text-slate-500">
+                  <div className="rounded-lg bg-olive-100 p-3">
+                    <dt className="text-xs text-teal-900">
                       Minimum stock
                     </dt>
-                    <dd className="mt-1 text-lg font-semibold text-slate-900">
+
+                    <dd className="mt-1 text-lg font-semibold text-mauve-600">
                       {product.minimum_stock}
                     </dd>
                   </div>
@@ -116,8 +117,10 @@ function LowStockSection({
                 {canAdjustStock && (
                   <button
                     type="button"
-                    onClick={() => handleAdjustStock(product.id)}
-                    className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+                    onClick={() =>
+                      handleAdjustStock(product.id)
+                    }
+                    className="min-h-11 w-full rounded-lg border border-mauve-600 bg-mauve-600 px-4 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none focus:ring-2 focus:ring-olive-50 focus:ring-offset-2"
                   >
                     Adjust Stock
                   </button>
@@ -129,47 +132,51 @@ function LowStockSection({
           {/* Desktop table */}
           <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50">
+              <caption className="sr-only">
+                Products at or below their minimum stock levels
+              </caption>
+
+              <thead className="bg-olive-200">
                 <tr>
-                  <th className="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
+                  <th className="whitespace-nowrap px-5 py-3 text-center font-semibold text-teal-900">
                     Product
                   </th>
 
-                  <th className="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
+                  <th className="whitespace-nowrap px-5 py-3 text-center font-semibold text-teal-900">
                     Current Stock
                   </th>
 
-                  <th className="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
+                  <th className="whitespace-nowrap px-5 py-3 text-center font-semibold text-teal-900">
                     Minimum Stock
                   </th>
 
-                  <th className="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
+                  <th className="whitespace-nowrap px-5 py-3 font-semibold text-teal-900">
                     Status
                   </th>
 
                   {canAdjustStock && (
-                    <th className="whitespace-nowrap px-5 py-3 text-right font-semibold text-slate-600">
+                    <th className="whitespace-nowrap px-5 py-3 text-center font-semibold text-teal-900">
                       Action
                     </th>
                   )}
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-olive-100">
                 {products.map((product) => (
                   <tr
                     key={product.id}
-                    className="transition hover:bg-slate-50/70"
+                    className="transition hover:bg-olive-100"
                   >
-                    <td className="max-w-xs break-words px-5 py-4 font-medium text-slate-900">
+                    <td className="max-w-xs break-words px-5 py-4 text-center font-medium text-mauve-600">
                       {product.name}
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4 text-slate-700">
+                    <td className="whitespace-nowrap px-5 py-4 text-center text-mauve-600">
                       {product.stock_quantity}
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4 text-slate-700">
+                    <td className="whitespace-nowrap px-5 py-4 text-center text-mauve-600">
                       {product.minimum_stock}
                     </td>
 
@@ -180,11 +187,13 @@ function LowStockSection({
                     </td>
 
                     {canAdjustStock && (
-                      <td className="whitespace-nowrap px-5 py-4 text-right">
+                      <td className="whitespace-nowrap px-5 py-4 text-center">
                         <button
                           type="button"
-                          onClick={() => handleAdjustStock(product.id)}
-                          className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+                          onClick={() =>
+                            handleAdjustStock(product.id)
+                          }
+                          className="min-h-10 rounded-lg border border-mauve-600 bg-mauve-600 px-3 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none focus:ring-2 focus:ring-olive-50 focus:ring-offset-2"
                         >
                           Adjust Stock
                         </button>

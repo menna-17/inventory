@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getDashboardData } from "../services/dashboardService";
 import type { DashboardData } from "../types/dashboard";
@@ -20,43 +20,75 @@ export function useDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchDashboard = useCallback(async () => {
+  const mountedRef = useRef(false);
+  const requestIdRef = useRef(0);
+
+  const refetch = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+
+    setLoading(true);
+    setError("");
+
     try {
       const dashboardData = await getDashboardData();
-      setData(dashboardData);
-      setError("");
-    } catch (error) {
-      console.error("Failed to load dashboard:", error);
-      setError("Failed to load dashboard data.");
+
+      if (
+        mountedRef.current &&
+        requestId === requestIdRef.current
+      ) {
+        setData(dashboardData);
+      }
+    } catch (err) {
+      if (
+        mountedRef.current &&
+        requestId === requestIdRef.current
+      ) {
+        console.error("Failed to load dashboard:", err);
+        setError("Failed to load dashboard data.");
+      }
     } finally {
-      setLoading(false);
+      if (
+        mountedRef.current &&
+        requestId === requestIdRef.current
+      ) {
+        setLoading(false);
+      }
     }
   }, []);
 
-  const refetch = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    await fetchDashboard();
-  }, [fetchDashboard]);
-
   useEffect(() => {
+    mountedRef.current = true;
     let cancelled = false;
+
+    const requestId = ++requestIdRef.current;
 
     async function loadInitialDashboard() {
       try {
         const dashboardData = await getDashboardData();
 
-        if (!cancelled) {
+        if (
+          !cancelled &&
+          mountedRef.current &&
+          requestId === requestIdRef.current
+        ) {
           setData(dashboardData);
           setError("");
         }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Failed to load dashboard:", error);
+      } catch (err) {
+        if (
+          !cancelled &&
+          mountedRef.current &&
+          requestId === requestIdRef.current
+        ) {
+          console.error("Failed to load dashboard:", err);
           setError("Failed to load dashboard data.");
         }
       } finally {
-        if (!cancelled) {
+        if (
+          !cancelled &&
+          mountedRef.current &&
+          requestId === requestIdRef.current
+        ) {
           setLoading(false);
         }
       }
@@ -66,6 +98,8 @@ export function useDashboard() {
 
     return () => {
       cancelled = true;
+      mountedRef.current = false;
+      requestIdRef.current += 1;
     };
   }, []);
 

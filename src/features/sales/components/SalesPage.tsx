@@ -94,7 +94,7 @@ function SalesPage() {
       )}
 
       {/* Create sale */}
-      <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="relative isolate my-2 min-w-0 overflow-visible rounded-xl border border-olive-100 bg-olive-100 shadow-sm">
         <SaleForm
           products={products}
           saving={saving}

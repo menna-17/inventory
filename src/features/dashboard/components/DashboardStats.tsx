@@ -5,14 +5,13 @@ type DashboardStatsProps = {
   stats: DashboardStatsType;
 };
 
-const numberFormatter = new Intl.NumberFormat(undefined, {
+const numberFormatter = new Intl.NumberFormat("en-EG", {
   maximumFractionDigits: 0,
 });
 
-const currencyFormatter = new Intl.NumberFormat(undefined, {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
+const currencyFormatter = new Intl.NumberFormat("en-EG", {
+  style: "decimal",
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 
@@ -22,25 +21,25 @@ function DashboardStats({ stats }: DashboardStatsProps) {
       label: "Total Products",
       value: numberFormatter.format(stats.totalProducts),
       description: "Products in your catalog",
-      accent: "border-l-blue-500",
+      accent: "border-l-mauve-600",
     },
     {
       label: "Total Stock",
       value: numberFormatter.format(stats.totalStock),
       description: "Units currently in stock",
-      accent: "border-l-violet-500",
+      accent: "border-l-teal-900",
     },
     {
       label: "Total Sales",
-      value: currencyFormatter.format(stats.totalSales),
+      value: `${currencyFormatter.format(stats.totalSales)} EGP`,
       description: "All recorded sales",
-      accent: "border-l-emerald-500",
+      accent: "border-l-mauve-600",
     },
     {
       label: "Sales Today",
-      value: currencyFormatter.format(stats.salesToday),
+      value: `${currencyFormatter.format(stats.salesToday)} EGP`,
       description: "Sales recorded today",
-      accent: "border-l-amber-500",
+      accent: "border-l-teal-900",
     },
   ];
 
@@ -52,17 +51,17 @@ function DashboardStats({ stats }: DashboardStatsProps) {
       {cards.map((card) => (
         <article
           key={card.label}
-          className={`min-w-0 rounded-xl border border-slate-200 border-l-4 ${card.accent} bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5`}
+          className={`min-w-0 rounded-xl border border-olive-100 border-l-4 ${card.accent} bg-olive-100 p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5`}
         >
-          <h2 className="text-sm font-medium text-slate-500">
+          <h2 className="text-sm font-medium text-teal-900">
             {card.label}
           </h2>
 
-          <p className="mt-3 break-words text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <p className="mt-3 break-words text-2xl font-bold tracking-tight text-mauve-600 sm:text-3xl">
             {card.value}
           </p>
 
-          <p className="mt-2 text-xs leading-5 text-slate-500 sm:text-sm">
+          <p className="mt-2 text-xs leading-5 text-teal-900 sm:text-sm">
             {card.description}
           </p>
         </article>

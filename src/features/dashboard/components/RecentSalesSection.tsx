@@ -14,6 +14,8 @@ function RecentSalesSection({
       sales={sales}
       title="Recent Sales"
       description="View the latest sales and who processed them."
+      titleClassName="text-xl font-bold  text-mauve-600"
+      descriptionClassName="mt-1 text-sm text-mauve-600"
     />
   );
 }
