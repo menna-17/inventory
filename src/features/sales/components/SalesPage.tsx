@@ -1,8 +1,13 @@
 
+import { useState } from "react";
+
 import SaleForm from "./SaleForm";
 import SalesHistory from "./SalesHistory";
 
 import { useSales } from "../hooks/useSales";
+import Pagination from "../../../components/ui/Pagination";
+
+const PAGE_SIZE = 10;
 
 function SalesPage() {
   const {
@@ -15,6 +20,47 @@ function SalesPage() {
     refresh,
   } = useSales();
 
+  const [page, setPage] = useState(1);
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+
+  // Filter sales by employee name.
+  const normalizedEmployeeSearch = employeeSearch.trim().toLowerCase();
+
+  const nameFilteredSales = normalizedEmployeeSearch
+    ? sales.filter((sale) =>
+        (sale.user?.full_name ?? "")
+          .toLowerCase()
+          .includes(normalizedEmployeeSearch),
+      )
+    : sales;
+
+  // Filter sales by the selected local calendar date.
+  const filteredSales = selectedDate
+    ? nameFilteredSales.filter((sale) => {
+        const saleDate = new Date(sale.created_at);
+
+        if (Number.isNaN(saleDate.getTime())) {
+          return false;
+        }
+
+        const year = saleDate.getFullYear();
+        const month = String(saleDate.getMonth() + 1).padStart(2, "0");
+        const day = String(saleDate.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}` === selectedDate;
+      })
+    : nameFilteredSales;
+
+  // Pagination uses the filtered results.
+  const totalCount = filteredSales.length;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const currentPage = Math.max(
+    1,
+    Math.min(page, Math.max(1, totalPages)),
+  );
+
   async function handleCreateSale(
     productId: string,
     quantity: number,
@@ -25,6 +71,37 @@ function SalesPage() {
     });
   }
 
+  function handlePageChange(nextPage: number) {
+    if (nextPage < 1 || nextPage > totalPages) {
+      return;
+    }
+
+    setPage(nextPage);
+  }
+
+  function handleEmployeeSearchChange(value: string) {
+    setEmployeeSearch(value);
+    setPage(1);
+  }
+
+  function handleDateChange(value: string) {
+    setSelectedDate(value);
+    setPage(1);
+  }
+
+  function clearFilters() {
+    setEmployeeSearch("");
+    setSelectedDate("");
+    setPage(1);
+  }
+
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+
+  const paginatedSales = filteredSales.slice(
+    startIndex,
+    startIndex + PAGE_SIZE,
+  );
+
   if (loading) {
     return (
       <section
@@ -33,22 +110,23 @@ function SalesPage() {
         aria-label="Loading sales"
       >
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-mauve-600">
             Sales
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+
+          <p className="mt-1 text-sm text-mauve-600">
             Record sales and view your sales history.
           </p>
         </div>
 
-        <div className="animate-pulse rounded-xl border border-slate-200 bg-white p-5">
-          <div className="h-5 w-32 rounded bg-slate-200" />
-          <div className="mt-4 h-11 w-full rounded bg-slate-100" />
-          <div className="mt-4 h-11 w-full rounded bg-slate-100" />
-          <div className="mt-4 h-10 w-28 rounded bg-slate-200" />
+        <div className="animate-pulse rounded-xl border border-olive-100 bg-olive-100 p-5">
+          <div className="h-5 w-32 rounded bg-olive-200" />
+          <div className="mt-4 h-11 w-full rounded bg-olive-200" />
+          <div className="mt-4 h-11 w-full rounded bg-olive-200" />
+          <div className="mt-4 h-10 w-28 rounded bg-olive-200" />
         </div>
 
-        <p className="text-sm text-slate-500" role="status">
+        <p className="text-sm text-mauve-600" role="status">
           Loading sales...
         </p>
       </section>
@@ -59,11 +137,11 @@ function SalesPage() {
     <section className="min-w-0 space-y-6 sm:space-y-8">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-mauve-600 sm:text-3xl">
           Sales
         </h1>
 
-        <p className="mt-1 text-sm text-slate-600 sm:text-base">
+        <p className="mt-1 text-sm text-mauve-600 sm:text-base">
           Record sales and view your sales history.
         </p>
       </div>
@@ -78,6 +156,7 @@ function SalesPage() {
             <h2 className="font-semibold text-red-800">
               Something went wrong
             </h2>
+
             <p className="mt-1 break-words text-sm text-red-700">
               {error}
             </p>
@@ -86,7 +165,7 @@ function SalesPage() {
           <button
             type="button"
             onClick={() => void refresh()}
-            className="min-h-11 shrink-0 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            className="min-h-11 shrink-0 rounded-lg border border-red-300 bg-olive-100 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
           >
             Reload sales
           </button>
@@ -102,12 +181,27 @@ function SalesPage() {
         />
       </div>
 
-      {/* Sales history */}
-      <div className="min-w-0">
+      {/* Sales history with filters below its heading */}
+      <div className="mt-12 min-w-0">
         <SalesHistory
-          sales={sales}
+          sales={paginatedSales}
           title="Sales History"
           description="View previous sales, who processed them, and their dates."
+          employeeSearch={employeeSearch}
+          selectedDate={selectedDate}
+          onEmployeeSearchChange={handleEmployeeSearchChange}
+          onDateChange={handleDateChange}
+          onClearFilters={clearFilters}
+          totalFilteredCount={totalCount}
+        />
+
+        {/* Pagination */}
+        <Pagination
+          page={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          pageSize={PAGE_SIZE}
+          onPageChange={handlePageChange}
         />
       </div>
     </section>

@@ -60,7 +60,7 @@ function ProductThumbnail({
       alt={productName}
       loading="lazy"
       onError={() => setImageFailed(true)}
-      className="h-10 w-10 shrink-0 rounded-lg border border-olive-200 bg-white object-cover"
+      className="h-10 w-10 shrink-0 rounded-lg border border-olive-200 bg-olive-100"
     />
   );
 }

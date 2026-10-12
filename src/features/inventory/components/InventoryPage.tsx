@@ -23,7 +23,7 @@ import ProductFilters from "../../products/components/ProductFilters";
 import type { FilterStatus } from "../../products/components/productFilters.utils";
 
 import InventoryTable from "./InventoryTable";
-import Pagination from "./Pagination";
+import Pagination from "../../../components/ui/Pagination";
 import StockAdjustmentModal from "./StockAdjustmentModal";
 import StockMovementHistory from "./StockMovementHistory";
 

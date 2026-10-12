@@ -1,3 +1,4 @@
+
 export type SaleItem = {
   id: string;
   sale_id: string;
@@ -6,6 +7,7 @@ export type SaleItem = {
   unit_price: number;
   product?: {
     name: string;
+    image_url: string | null;
   };
 };
 

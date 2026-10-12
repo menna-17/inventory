@@ -1,7 +1,8 @@
-
 import {
   useState,
+  useRef,
   type FormEvent,
+  type KeyboardEvent,
 } from "react";
 
 import type { Product } from "../../products/types/product";
@@ -26,6 +27,8 @@ function SaleForm({
   const [quantity, setQuantity] = useState("");
   const [validationError, setValidationError] =
     useState("");
+
+  const quantityInputRef = useRef<HTMLInputElement>(null);
 
   const selectedProduct = products.find(
     (product) => product.id === selectedProductId,
@@ -98,22 +101,31 @@ function SaleForm({
     }
   }
 
+  function handleProductKeyDown(event: KeyboardEvent<HTMLSelectElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (selectedProductId) {
+        quantityInputRef.current?.focus();
+      }
+    }
+  }
+
+  function handleQuantityKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const form = event.currentTarget.form;
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  }
+
   return (
-    <div className="min-w-0">
-      <div className="mb-5">
-        <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-          Create Sale
-        </h2>
-
-        <p className="mt-1 text-sm leading-5 text-slate-600">
-          Record a sale and automatically update inventory.
-        </p>
-      </div>
-
+    <div className="min-w-0 max-w-5xl pl-2 sm:pl-4">
       {availableProducts.length === 0 && (
         <div
           role="status"
-          className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
+          className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
         >
           <p className="font-medium">
             No products available
@@ -130,7 +142,7 @@ function SaleForm({
           <div className="min-w-0">
             <label
               htmlFor="sale-product"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-mauve-600"
             >
               Product
             </label>
@@ -142,11 +154,12 @@ function SaleForm({
                 setSelectedProductId(event.target.value);
                 setValidationError("");
               }}
+              onKeyDown={handleProductKeyDown}
               disabled={
                 saving || availableProducts.length === 0
               }
               required
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+              className="h-10 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300"
             >
               <option value="">
                 Select a product
@@ -163,7 +176,7 @@ function SaleForm({
             </select>
 
             {selectedProduct && (
-              <p className="mt-1.5 text-xs text-slate-500">
+              <p className="mt-1.5 text-xs text-teal-900">
                 Available stock: {selectedProduct.stock_quantity}
               </p>
             )}
@@ -173,12 +186,13 @@ function SaleForm({
           <div className="min-w-0">
             <label
               htmlFor="sale-quantity"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-mauve-600"
             >
               Quantity
             </label>
 
             <input
+              ref={quantityInputRef}
               id="sale-quantity"
               type="number"
               min="1"
@@ -190,13 +204,14 @@ function SaleForm({
                 setQuantity(event.target.value);
                 setValidationError("");
               }}
+              onKeyDown={handleQuantityKeyDown}
               disabled={saving || !selectedProductId}
               required
               placeholder="Enter quantity"
-              className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+              className="h-10 w-full rounded-lg border border-mauve-600 px-3 py-2 text-sm text-mauve-600 outline-none transition placeholder:text-mauve-500 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300"
             />
 
-            <p className="mt-1.5 text-xs text-slate-500">
+            <p className="mt-1.5 text-xs text-teal-900">
               Enter a whole number greater than zero.
             </p>
           </div>
@@ -205,19 +220,19 @@ function SaleForm({
         {validationError && (
           <p
             role="alert"
-            className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+            className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
           >
             {validationError}
           </p>
         )}
 
-        <div className="mt-5">
+        <div className="mt-3 flex justify-start pl-0.5">
           <button
             type="submit"
             disabled={
               saving || availableProducts.length === 0
             }
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-mauve-600 px-5 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? (
               <>

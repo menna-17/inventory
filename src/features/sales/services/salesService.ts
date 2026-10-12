@@ -1,3 +1,4 @@
+
 import { supabase } from "../../../lib/supabase";
 
 import type {
@@ -35,9 +36,7 @@ export async function getSales(): Promise<Sale[]> {
   const {
     data: salesData,
     error: salesError,
-  } = await supabase.rpc(
-    "get_sales_history",
-  );
+  } = await supabase.rpc("get_sales_history");
 
   if (salesError) {
     console.error(
@@ -48,8 +47,7 @@ export async function getSales(): Promise<Sale[]> {
     throw salesError;
   }
 
-  const sales =
-    (salesData ?? []) as SalesHistoryRow[];
+  const sales = (salesData ?? []) as SalesHistoryRow[];
 
   if (sales.length === 0) {
     return [];
@@ -61,9 +59,7 @@ export async function getSales(): Promise<Sale[]> {
    * -----------------------------------------------------
    */
 
-  const saleIds = sales.map(
-    (sale) => sale.id,
-  );
+  const saleIds = sales.map((sale) => sale.id);
 
   const {
     data: itemsData,
@@ -86,21 +82,20 @@ export async function getSales(): Promise<Sale[]> {
 
   /*
    * -----------------------------------------------------
-   * Get product names
+   * Get product names and images
    * -----------------------------------------------------
    */
 
   const productIds = [
     ...new Set(
-      (itemsData ?? []).map(
-        (item) => item.product_id,
-      ),
+      (itemsData ?? []).map((item) => item.product_id),
     ),
   ];
 
   let products: {
     id: string;
     name: string;
+    image_url: string | null;
   }[] = [];
 
   if (productIds.length > 0) {
@@ -109,7 +104,7 @@ export async function getSales(): Promise<Sale[]> {
       error: productsError,
     } = await supabase
       .from("products")
-      .select("id, name")
+      .select("id, name, image_url")
       .in("id", productIds);
 
     if (productsError) {
@@ -130,43 +125,36 @@ export async function getSales(): Promise<Sale[]> {
    * -----------------------------------------------------
    */
 
-  return sales.map(
-    (sale) => {
-      const saleItems = (
-        itemsData ?? []
-      )
-        .filter(
-          (item) =>
-            item.sale_id ===
-            sale.id,
-        )
-        .map((item) => ({
-          ...item,
-          product:
-            products.find(
-              (product) =>
-                product.id ===
-                item.product_id,
-            ),
-        }));
+  return sales.map((sale) => {
+    const saleItems = (itemsData ?? [])
+      .filter((item) => item.sale_id === sale.id)
+      .map((item) => {
+        const product = products.find(
+          (product) => product.id === item.product_id,
+        );
 
-      return {
-        id: sale.id,
-        user_id: sale.user_id,
-        total_amount:
-          Number(
-            sale.total_amount,
-          ),
-        created_at:
-          sale.created_at,
-        user: {
-          full_name:
-            sale.user_name,
-        },
-        items: saleItems,
-      };
-    },
-  );
+        return {
+          ...item,
+          product: product
+            ? {
+                name: product.name,
+                image_url: product.image_url,
+              }
+            : undefined,
+        };
+      });
+
+    return {
+      id: sale.id,
+      user_id: sale.user_id,
+      total_amount: Number(sale.total_amount),
+      created_at: sale.created_at,
+      user: {
+        full_name: sale.user_name,
+      },
+      items: saleItems,
+    };
+  });
 }
 
 /*
@@ -212,15 +200,11 @@ export async function createSale(
   }
 
   if (!input.productId) {
-    throw new Error(
-      "A product is required.",
-    );
+    throw new Error("A product is required.");
   }
 
   if (
-    !Number.isInteger(
-      input.quantity,
-    ) ||
+    !Number.isInteger(input.quantity) ||
     input.quantity <= 0
   ) {
     throw new Error(
@@ -231,25 +215,17 @@ export async function createSale(
   const {
     data,
     error,
-  } = await supabase.rpc(
-    "create_sale",
-    {
-      p_items: [
-        {
-          product_id:
-            input.productId,
-          quantity:
-            input.quantity,
-        },
-      ],
-    },
-  );
+  } = await supabase.rpc("create_sale", {
+    p_items: [
+      {
+        product_id: input.productId,
+        quantity: input.quantity,
+      },
+    ],
+  });
 
   if (error) {
-    console.error(
-      "createSale RPC error:",
-      error,
-    );
+    console.error("createSale RPC error:", error);
 
     throw error;
   }
