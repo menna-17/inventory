@@ -313,7 +313,7 @@ function AppLayout() {
             type="button"
             onClick={handleSignOut}
             disabled={isSigningOut}
-            className="min-h-11 shrink-0 rounded-md px-3 py-2 text-md font-medium text-olive-50 hover:bg-olive-50 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-11 shrink-0 rounded-md px-3 py-2 text-md font-medium text-olive-50 hover:bg-olive-50 hover:text-teal-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSigningOut ? "Signing out..." : "Sign out"}
           </button>

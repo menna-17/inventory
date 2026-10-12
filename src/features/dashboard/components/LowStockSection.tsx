@@ -120,7 +120,7 @@ function LowStockSection({
                     onClick={() =>
                       handleAdjustStock(product.id)
                     }
-                    className="min-h-11 w-full rounded-lg border border-mauve-600 bg-mauve-600 px-4 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none focus:ring-2 focus:ring-olive-50 focus:ring-offset-2"
+                    className="min-h-11 w-full rounded-lg border border-mauve-600 bg-mauve-600 px-4 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 "
                   >
                     Adjust Stock
                   </button>
@@ -193,7 +193,7 @@ function LowStockSection({
                           onClick={() =>
                             handleAdjustStock(product.id)
                           }
-                          className="min-h-10 rounded-lg border border-mauve-600 bg-mauve-600 px-3 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none focus:ring-2 focus:ring-olive-50 focus:ring-offset-2"
+                          className="min-h-10 rounded-lg border border-mauve-600 bg-mauve-600 px-3 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 "
                         >
                           Adjust Stock
                         </button>

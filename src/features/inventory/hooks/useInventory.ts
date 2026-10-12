@@ -1,13 +1,10 @@
 
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   getInventoryItems,
   updateStock,
+  type InventoryFilters,
 } from "../services/inventoryService";
 
 import type {
@@ -20,6 +17,11 @@ type UseInventoryResult = {
   isLoading: boolean;
   isUpdatingStock: boolean;
   error: Error | null;
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  setPage: (page: number) => void;
+  setFilters: (filters: InventoryFilters) => void;
   refetch: () => Promise<void>;
   adjustStock: (
     productId: string,
@@ -28,15 +30,33 @@ type UseInventoryResult = {
   ) => Promise<boolean>;
 };
 
-function normalizeError(
-  error: unknown,
-  fallback: string,
-): Error {
-  if (error instanceof Error) {
-    return error;
-  }
+function normalizeError(error: unknown, fallback: string): Error {
+  return error instanceof Error ? error : new Error(fallback);
+}
 
-  return new Error(fallback);
+function normalizePage(page: number): number {
+  return Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+}
+
+function normalizeFilters(
+  filters: InventoryFilters,
+): InventoryFilters {
+  return {
+    searchTerm: filters.searchTerm?.trim() ?? "",
+    categoryFilter: filters.categoryFilter ?? "all",
+    statusFilter: filters.statusFilter ?? "all",
+  };
+}
+
+function areFiltersEqual(
+  first: InventoryFilters,
+  second: InventoryFilters,
+): boolean {
+  return (
+    first.searchTerm === second.searchTerm &&
+    first.categoryFilter === second.categoryFilter &&
+    first.statusFilter === second.statusFilter
+  );
 }
 
 export function useInventory(): UseInventoryResult {
@@ -45,58 +65,158 @@ export function useInventory(): UseInventoryResult {
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const [page, setPageState] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const [filters, setFiltersState] = useState<InventoryFilters>({
+    searchTerm: "",
+    categoryFilter: "all",
+    statusFilter: "all",
+  });
+
+  const [refreshVersion, setRefreshVersion] = useState(0);
+
+  const requestIdRef = useRef(0);
+  const pageRef = useRef(1);
+  const filtersRef = useRef<InventoryFilters>(filters);
+  const hasLoadedRef = useRef(false);
+
+  const refreshWaitersRef = useRef<
+    Array<{
+      resolve: () => void;
+      reject: (error: Error) => void;
+    }>
+  >([]);
+
+  const settleRefreshWaiters = useCallback(
+    (requestError?: Error) => {
+      const waiters = refreshWaitersRef.current;
+      refreshWaitersRef.current = [];
+
+      waiters.forEach(({ resolve, reject }) => {
+        if (requestError) {
+          reject(requestError);
+        } else {
+          resolve();
+        }
+      });
+    },
+    [],
+  );
+
   useEffect(() => {
     let cancelled = false;
+    const requestId = ++requestIdRef.current;
 
-    async function loadInitialInventory() {
+    async function fetchPage() {
       try {
-        const data = await getInventoryItems();
+        const result = await getInventoryItems({
+          ...filters,
+          page,
+        });
 
-        if (cancelled) return;
+        if (cancelled || requestId !== requestIdRef.current) {
+          return;
+        }
 
-        setItems(data);
+        setItems(result.items);
+        setTotalCount(result.totalCount);
+        setTotalPages(result.totalPages);
         setError(null);
-      } catch (error) {
-        if (cancelled) return;
 
-        console.error("Initial inventory load error:", error);
-        setError(
-          normalizeError(error, "Failed to load inventory."),
+        hasLoadedRef.current = true;
+
+        // The service may correct the page if the total count changes.
+        if (result.page !== page) {
+          pageRef.current = result.page;
+          setPageState(result.page);
+        } else {
+          pageRef.current = page;
+        }
+
+        settleRefreshWaiters();
+      } catch (requestError) {
+        if (cancelled || requestId !== requestIdRef.current) {
+          return;
+        }
+
+        const normalized = normalizeError(
+          requestError,
+          "Failed to load inventory.",
         );
+
+        setError(normalized);
+        setItems([]);
+        setTotalCount(0);
+        setTotalPages(0);
+
+        settleRefreshWaiters(normalized);
       } finally {
-        if (!cancelled) {
+        if (!cancelled && requestId === requestIdRef.current) {
           setIsLoading(false);
         }
       }
     }
 
-    void loadInitialInventory();
+    void fetchPage();
 
     return () => {
       cancelled = true;
+
+      if (requestIdRef.current === requestId) {
+        requestIdRef.current += 1;
+      }
     };
+  }, [filters, page, refreshVersion, settleRefreshWaiters]);
+
+  const setFilters = useCallback((nextFilters: InventoryFilters) => {
+    const normalized = normalizeFilters(nextFilters);
+    const current = filtersRef.current;
+
+    if (areFiltersEqual(current, normalized)) {
+      return;
+    }
+
+    filtersRef.current = normalized;
+    pageRef.current = 1;
+
+    setError(null);
+    setPageState(1);
+    setFiltersState(normalized);
+
+    // Preserve the initial skeleton, but keep existing content visible
+    // when filters change after the first successful load.
+    if (!hasLoadedRef.current) {
+      setIsLoading(true);
+    }
+  }, []);
+
+  const setPage = useCallback((nextPage: number) => {
+    const normalized = normalizePage(nextPage);
+
+    if (normalized === pageRef.current) {
+      return;
+    }
+
+    pageRef.current = normalized;
+    setError(null);
+    setPageState(normalized);
+
+    // Do not set isLoading(true) for page changes.
+    // Existing rows remain visible until the new page arrives.
   }, []);
 
   const refetch = useCallback(async (): Promise<void> => {
+    const promise = new Promise<void>((resolve, reject) => {
+      refreshWaitersRef.current.push({ resolve, reject });
+    });
+
     setIsLoading(true);
     setError(null);
+    setRefreshVersion((version) => version + 1);
 
-    try {
-      const data = await getInventoryItems();
-      setItems(data);
-    } catch (error) {
-      console.error("useInventory refetch error:", error);
-
-      const normalized = normalizeError(
-        error,
-        "Failed to refresh inventory.",
-      );
-
-      setError(normalized);
-      throw normalized;
-    } finally {
-      setIsLoading(false);
-    }
+    await promise;
   }, []);
 
   const adjustStock = useCallback(
@@ -110,24 +230,18 @@ export function useInventory(): UseInventoryResult {
 
       try {
         await updateStock(productId, movementType, quantity);
-
-        const data = await getInventoryItems();
-        setItems(data);
-
+        await refetch();
         return true;
-      } catch (error) {
-        console.error("adjustStock error:", error);
-
+      } catch (requestError) {
         setError(
-          normalizeError(error, "Failed to adjust stock."),
+          normalizeError(requestError, "Failed to adjust stock."),
         );
-
         return false;
       } finally {
         setIsUpdatingStock(false);
       }
     },
-    [],
+    [refetch],
   );
 
   return {
@@ -135,6 +249,11 @@ export function useInventory(): UseInventoryResult {
     isLoading,
     isUpdatingStock,
     error,
+    page,
+    totalPages,
+    totalCount,
+    setPage,
+    setFilters,
     refetch,
     adjustStock,
   };

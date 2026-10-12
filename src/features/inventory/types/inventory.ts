@@ -31,6 +31,7 @@ export type StockMovement = {
 
   product?: {
     name: string;
+    image_url: string | null;
   };
 
   user?: {
@@ -51,4 +52,5 @@ export type StockMovementRpcRow = {
   created_at: string;
   product_name: string | null;
   user_name: string | null;
+  image_url: string | null;
 };
