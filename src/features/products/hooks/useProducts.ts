@@ -6,13 +6,14 @@ import {
 } from "react";
 
 import { getProducts } from "../services/productService";
-import { getCategories } from "../services/categoryService";
+import { getCategories } from "../../categories/services/categoryService";
 
 import type {
-  Category,
-  Product,
+  Category
+} from "../../categories/types/category";
+import type {
+  Product
 } from "../types/product";
-
 type UseProductsResult = {
   products: Product[];
   categories: Category[];

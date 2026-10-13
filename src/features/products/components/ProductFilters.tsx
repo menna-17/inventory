@@ -1,4 +1,6 @@
 
+import { useEffect, useState } from "react";
+
 import {
   getStatus,
   type FilterStatus,
@@ -30,6 +32,20 @@ export default function ProductFilters<T extends FilterableItem>({
   filteredCount,
   onClearFilters,
 }: ProductFiltersProps<T>) {
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    if (localSearchTerm === searchTerm) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      onSearchChange(localSearchTerm);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [localSearchTerm, searchTerm, onSearchChange]);
+
   const counts = products.reduce(
     (result, item) => {
       const status = getStatus(item);
@@ -53,40 +69,46 @@ export default function ProductFilters<T extends FilterableItem>({
       value: "all",
       label: "All",
       count: products.length,
-      activeClass: "bg-slate-900 text-white",
+      activeClass: "bg-mauve-600 text-olive-50",
     },
     {
       value: "in_stock",
       label: "In Stock",
       count: counts.in_stock,
-      activeClass: "bg-emerald-700 text-white",
+      activeClass: "bg-teal-900 text-olive-50",
     },
     {
       value: "low_stock",
       label: "Low Stock",
       count: counts.low_stock,
-      activeClass: "bg-amber-500 text-white",
+      activeClass: "bg-yellow-400 text-olive-50",
     },
     {
       value: "out_of_stock",
       label: "Out of Stock",
       count: counts.out_of_stock,
-      activeClass: "bg-red-600 text-white",
+      activeClass: "bg-red-700 text-olive-50",
     },
   ];
 
   const hasActiveFilters =
     searchTerm.trim() !== "" ||
+    localSearchTerm.trim() !== "" ||
     statusFilter !== "all" ||
     categoryFilter !== "all";
 
+  function handleClearFilters() {
+    setLocalSearchTerm("");
+    onClearFilters();
+  }
+
   return (
     <div className="w-full space-y-5">
-      <div className="grid w-full grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 sm:p-5">
+      <div className="grid w-full grid-cols-1 gap-4 rounded-xl border border-olive-100 bg-olive-100 p-4 sm:grid-cols-2 sm:p-5">
         <div className="min-w-0">
           <label
             htmlFor="product-search"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-mauve-600"
           >
             Search products
           </label>
@@ -94,17 +116,17 @@ export default function ProductFilters<T extends FilterableItem>({
           <input
             id="product-search"
             type="search"
-            value={searchTerm}
-            onChange={(event) => onSearchChange(event.target.value)}
+            value={localSearchTerm}
+            onChange={(event) => setLocalSearchTerm(event.target.value)}
             placeholder="Name or description..."
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2.5 text-sm outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 placeholder:text-mauve-400"
           />
         </div>
 
         <div className="min-w-0">
           <label
             htmlFor="category-filter"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-mauve-600"
           >
             Category
           </label>
@@ -113,7 +135,7 @@ export default function ProductFilters<T extends FilterableItem>({
             id="category-filter"
             value={categoryFilter}
             onChange={(event) => onCategoryChange(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2.5 text-sm text-mauve-800 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           >
             <option value="all">All Categories</option>
 
@@ -127,7 +149,7 @@ export default function ProductFilters<T extends FilterableItem>({
       </div>
 
       <div className="w-full">
-        <p className="mb-2 text-sm font-medium text-slate-700">
+        <p className="mb-2 text-sm font-medium text-mauve-600">
           Filter by stock status
         </p>
 
@@ -141,10 +163,10 @@ export default function ProductFilters<T extends FilterableItem>({
                 type="button"
                 aria-pressed={active}
                 onClick={() => onStatusChange(filter.value)}
-                className={`min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 ${
+                className={`min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none  ${
                   active
                     ? filter.activeClass
-                    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    : "border border-olive-200 bg-olive-200 text-mauve-600 hover:bg-olive-300"
                 }`}
               >
                 {filter.label} ({filter.count})
@@ -155,23 +177,25 @@ export default function ProductFilters<T extends FilterableItem>({
       </div>
 
       <div className="flex w-full flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-slate-500" aria-live="polite">
+        <p className="text-sm text-mauve-600" aria-live="polite">
           Showing{" "}
-          <span className="font-semibold text-slate-800">
+           <span className="font-semibold text-mauve-600">
             {filteredCount}
           </span>{" "}
+         
           of{" "}
-          <span className="font-semibold text-slate-800">
+           <span className="font-semibold text-mauve-600">
             {products.length}
           </span>{" "}
+         
           products
         </p>
 
         {hasActiveFilters && (
           <button
             type="button"
-            onClick={onClearFilters}
-            className="min-h-10 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900"
+            onClick={handleClearFilters}
+            className="min-h-10 rounded-lg px-3 py-2 text-sm font-medium text-mauve-600 underline underline-offset-4 hover:text-mauve-700"
           >
             Clear filters
           </button>

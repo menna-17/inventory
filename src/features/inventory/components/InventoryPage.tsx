@@ -10,9 +10,9 @@ import {
   type StockMovementPageResult,
 } from "../services/stockMovementService";
 
-import { getCategories } from "../../products/services/categoryService";
+import { getCategories } from "../../categories/services/categoryService";
 
-import type { Category } from "../../products/types/product";
+import type { Category } from "../../categories/types/category";
 import type {
   InventoryItem,
   StockMovement,

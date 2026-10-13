@@ -5,11 +5,14 @@ import type {
   FormEvent,
 } from "react";
 
-import type { Category, Product } from "../types/product";
+import type {  Product } from "../types/product";
+import type {  Category } from "../../categories/types/category";
 import {
-  createProduct,
-  updateProduct,
+ 
+  updateProduct
 } from "../services/productService";
+import {
+  createProduct} from "../services/productService";
 
 type ProductFormProps = {
   categories: Category[];

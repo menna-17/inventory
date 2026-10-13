@@ -1,11 +1,17 @@
+import { useMemo, useRef, useState } from "react";
 
-import { useMemo, useState } from "react";
 import type { Product } from "../types/product";
+
 import ProductFilters from "./ProductFilters";
+
 import {
   filterProducts,
   type FilterStatus,
 } from "./productFilters.utils";
+
+import Pagination from "../../../components/ui/Pagination";
+
+const PAGE_SIZE = 10;
 
 type ProductListProps = {
   products: Product[];
@@ -65,7 +71,7 @@ function ProductImage({
       <div
         role="img"
         aria-label={`No image available for ${name}`}
-        className={`flex shrink-0 items-center justify-center bg-slate-100 text-slate-400 ${className}`}
+        className={`flex shrink-0 items-center justify-center bg-olive-200 text-olive-200 ${className}`}
       >
         <svg
           aria-hidden="true"
@@ -106,6 +112,9 @@ function ProductList({
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+
+  const productListRef = useRef<HTMLDivElement>(null);
 
   const categoryNames = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
@@ -126,6 +135,41 @@ function ProductList({
       ),
     [products, searchTerm, statusFilter, categoryFilter],
   );
+
+  const totalCount = filteredProducts.length;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(totalPages, 1));
+
+  const paginatedProducts = useMemo(
+    () =>
+      filteredProducts.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE,
+      ),
+    [filteredProducts, currentPage],
+  );
+
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+
+    requestAnimationFrame(() => {
+      productListRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  function handleEdit(product: Product) {
+    onEdit(product);
+
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    });
+  }
 
   async function handleDelete(product: Product) {
     if (!canDelete || deletingId) {
@@ -169,15 +213,31 @@ function ProductList({
     setSearchTerm("");
     setStatusFilter("all");
     setCategoryFilter("all");
+    setPage(1);
+  }
+
+  function handleSearchChange(value: string) {
+    setSearchTerm(value);
+    setPage(1);
+  }
+
+  function handleStatusChange(value: FilterStatus) {
+    setStatusFilter(value);
+    setPage(1);
+  }
+
+  function handleCategoryChange(value: string) {
+    setCategoryFilter(value);
+    setPage(1);
   }
 
   if (products.length === 0) {
     return (
-      <div className="w-full rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-        <h2 className="text-lg font-semibold text-slate-900">
+      <div className="w-full rounded-xl border border-dashed border-olive-100 bg-olive-100 px-5 py-10 text-center">
+        <h2 className="text-lg font-semibold text-mauve-600">
           No products available
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-mauve-600">
           Products will appear here when they have been added.
         </p>
       </div>
@@ -185,7 +245,10 @@ function ProductList({
   }
 
   return (
-    <div className="w-full min-w-0 space-y-5">
+    <div
+      ref={productListRef}
+      className="w-full min-w-0 space-y-5 scroll-mt-4"
+    >
       {deleteError && (
         <div
           role="alert"
@@ -216,25 +279,25 @@ function ProductList({
         searchTerm={searchTerm}
         statusFilter={statusFilter}
         categoryFilter={categoryFilter}
-        onSearchChange={setSearchTerm}
-        onStatusChange={setStatusFilter}
-        onCategoryChange={setCategoryFilter}
+        onSearchChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onCategoryChange={handleCategoryChange}
         filteredCount={filteredProducts.length}
         onClearFilters={clearFilters}
       />
 
       {filteredProducts.length === 0 ? (
-        <div className="w-full rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-          <h2 className="text-lg font-semibold text-slate-900">
+        <div className="w-full rounded-xl border border-dashed border-olive-100 bg-olive-100 px-5 py-10 text-center">
+          <h2 className="text-lg font-semibold text-mauve-600">
             No matching products
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-mauve-600">
             Try changing your search or filters.
           </p>
           <button
             type="button"
             onClick={clearFilters}
-            className="mt-4 min-h-11 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+            className="mt-4 min-h-11 rounded-lg bg-mauve-600 px-4 py-2.5 text-sm font-semibold text-olive-50 hover:bg-mauve-700"
           >
             Clear search and filters
           </button>
@@ -243,25 +306,25 @@ function ProductList({
         <>
           {/* Mobile product cards */}
           <div className="grid w-full grid-cols-1 gap-3 md:hidden">
-            {filteredProducts.map((product) => {
+            {paginatedProducts.map((product) => {
               const stockStatus = getStockStatus(product);
               const isDeleting = deletingId === product.id;
 
               return (
                 <article
                   key={product.id}
-                  className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm"
                 >
                   <div className="flex items-start gap-3">
                     <ProductImage
                       src={product.image_url}
                       name={product.name}
-                      className="h-24 w-20 rounded-lg border border-slate-200"
+                      className="h-24 w-20 rounded-lg border border-olive-100"
                     />
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <h3 className="break-words font-semibold text-slate-900">
+                        <h3 className="break-words font-semibold text-mauve-600">
                           {product.name}
                         </h3>
                         <span
@@ -271,43 +334,45 @@ function ProductList({
                         </span>
                       </div>
 
-                      <p className="mt-1 break-words text-sm text-slate-500">
+                      <p className="mt-1 break-words text-sm text-teal-900">
                         {getCategoryName(product.category_id)}
                       </p>
 
-                      <p className="mt-2 text-sm font-semibold text-slate-900">
-                        {Number(product.price).toFixed(2)} EGP
+                      <p className="mt-2 text-sm font-semibold text-mauve-600">
+                        {Number(product.price).toLocaleString("en-US", {
+                          maximumFractionDigits: 0,
+                        })} EGP
                       </p>
                     </div>
                   </div>
 
                   {product.description?.trim() && (
-                    <p className="mt-3 break-words text-sm leading-5 text-slate-600">
+                    <p className="mt-3 break-words text-sm leading-5 text-mauve-600">
                       {product.description}
                     </p>
                   )}
 
-                  <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3">
+                  <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-olive-200 p-3">
                     <div>
-                      <p className="text-xs text-slate-500">Current stock</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
+                      <p className="text-xs text-teal-900">Current stock</p>
+                      <p className="mt-1 text-sm font-semibold text-mauve-600">
                         {product.stock_quantity}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Minimum stock</p>
-                      <p className="mt-1 text-sm text-slate-700">
+                      <p className="text-xs text-teal-900">Minimum stock</p>
+                      <p className="mt-1 text-sm text-mauve-600">
                         {product.minimum_stock}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                  <div className="mt-4 flex flex-wrap gap-2 pt-3">
                     <button
                       type="button"
-                      onClick={() => onEdit(product)}
+                      onClick={() => handleEdit(product)}
                       disabled={Boolean(deletingId)}
-                      className="min-h-10 flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="min-h-10 flex-1 rounded-lg border border-mauve-600 px-4 py-2 bg-mauve-600 text-sm font-semibold text-olive-50 hover:bg-mauve-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Edit
                     </button>
@@ -317,7 +382,7 @@ function ProductList({
                         type="button"
                         onClick={() => void handleDelete(product)}
                         disabled={Boolean(deletingId)}
-                        className="min-h-10 flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="min-h-10 flex-1 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-olive-50 hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {isDeleting ? "Deleting..." : "Delete"}
                       </button>
@@ -329,100 +394,102 @@ function ProductList({
           </div>
 
           {/* Desktop table */}
-          <div className="hidden w-full min-w-0 rounded-xl border border-slate-200 bg-white md:block">
+          <div className="hidden w-full min-w-0 rounded-xl border border-olive-100 bg-olive-100 md:block">
             <div className="w-full overflow-x-auto rounded-xl">
-              <table className="w-full min-w-[1000px] table-fixed divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+              <table className="w-full min-w-[1000px] table-fixed divide-y divide-olive-200">
+                <thead className="bg-olive-200">
                   <tr>
                     <th
                       scope="col"
-                      className="w-28 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-28 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Image
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Product
                     </th>
                     <th
                       scope="col"
-                      className="w-40 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-40 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Category
                     </th>
                     <th
                       scope="col"
-                      className="w-36 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-36 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Price
                     </th>
                     <th
                       scope="col"
-                      className="w-24 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-24 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Stock
                     </th>
                     <th
                       scope="col"
-                      className="w-36 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-36 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Status
                     </th>
                     <th
                       scope="col"
-                      className="w-28 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-28 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Minimum
                     </th>
                     <th
                       scope="col"
-                      className="w-44 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      className="w-44 px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Actions
                     </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-200">
-                  {filteredProducts.map((product) => {
+                <tbody className="divide-y divide-olive-200">
+                  {paginatedProducts.map((product) => {
                     const stockStatus = getStockStatus(product);
                     const isDeleting = deletingId === product.id;
 
                     return (
                       <tr
                         key={product.id}
-                        className="transition hover:bg-slate-50"
+                        className="transition hover:bg-olive-50"
                       >
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-4 text-center">
                           <ProductImage
                             src={product.image_url}
                             name={product.name}
-                            className="h-16 w-14 rounded-md border border-slate-200"
+                            className="mx-auto h-16 w-14 rounded-md border border-olive-100"
                           />
                         </td>
 
-                        <td className="min-w-0 px-5 py-4">
-                          <p className="break-words font-medium text-slate-900">
+                        <td className="min-w-0 px-5 py-4 text-center">
+                          <p className="break-words font-medium text-mauve-600">
                             {product.name}
                           </p>
                           {product.description?.trim() && (
-                            <p className="mt-1 break-words text-sm text-slate-500">
+                            <p className="mt-1 break-words text-sm text-mauve-600">
                               {product.description}
                             </p>
                           )}
                         </td>
 
-                        <td className="break-words px-5 py-4 text-sm text-slate-600">
+                        <td className="break-words px-5 py-4 text-center text-sm text-teal-900">
                           {getCategoryName(product.category_id)}
                         </td>
 
-                        <td className="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-slate-900">
-                          {Number(product.price).toFixed(2)} EGP
+                        <td className="whitespace-nowrap px-5 py-4 text-center text-sm font-medium text-mauve-600">
+                          {Number(product.price).toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })} EGP
                         </td>
 
-                        <td className="px-5 py-4 text-right text-sm text-slate-900">
+                        <td className="px-5 py-4 text-center text-sm text-teal-900">
                           {product.stock_quantity}
                         </td>
 
@@ -434,17 +501,17 @@ function ProductList({
                           </span>
                         </td>
 
-                        <td className="px-5 py-4 text-right text-sm text-slate-600">
+                        <td className="px-5 py-4 text-center text-sm text-mauve-600">
                           {product.minimum_stock}
                         </td>
 
                         <td className="px-5 py-4">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-center gap-2">
                             <button
                               type="button"
-                              onClick={() => onEdit(product)}
+                              onClick={() => handleEdit(product)}
                               disabled={Boolean(deletingId)}
-                              className="min-h-9 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="min-h-9 rounded-lg border bg-mauve-600 border-mauve-600 px-3 py-1.5 text-sm font-medium text-olive-50 transition hover:bg-mauve-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               Edit
                             </button>
@@ -454,7 +521,7 @@ function ProductList({
                                 type="button"
                                 onClick={() => void handleDelete(product)}
                                 disabled={Boolean(deletingId)}
-                                className="min-h-9 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="min-h-9 rounded-lg bg-red-700 px-3 py-1.5 text-sm font-medium text-olive-50 transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 {isDeleting ? "Deleting..." : "Delete"}
                               </button>
@@ -468,6 +535,14 @@ function ProductList({
               </table>
             </div>
           </div>
+
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={PAGE_SIZE}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </div>

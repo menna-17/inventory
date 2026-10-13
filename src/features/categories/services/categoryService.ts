@@ -1,6 +1,6 @@
 
 import { supabase } from "../../../lib/supabase";
-import type { Category } from "../types/product";
+import type { Category } from "../types/category";
 
 type CreateCategoryInput = {
   name: string;

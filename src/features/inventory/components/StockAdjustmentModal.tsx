@@ -95,7 +95,7 @@ function StockAdjustmentModal({
           onClick={onClose}
           disabled={isSaving}
           aria-label="Close stock adjustment"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-2xl leading-none text-mauve-600 transition hover:bg-mauve-700 hover:text-olive-50    disabled:cursor-not-allowed disabled:opacity-50"
+         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-2xl leading-none text-mauve-600 transition-transform duration-200 hover:scale-125 hover:text-mauve-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span aria-hidden="true">×</span>
         </button>
@@ -181,7 +181,7 @@ function StockAdjustmentModal({
         ? "stock-adjustment-error"
         : "stock-quantity-help"
     }
-    className="mt-1 block min-h-11 w-full max-w-xs rounded-lg border border-mauve-600 px-3 py-2 text-base text-mauve-600 placeholder:text-mauve-600 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100"
+    className="mt-1 block min-h-11 w-full max-w-xs rounded-lg border bg-olive-200 border-mauve-600 px-3 py-2 text-base text-mauve-600 placeholder:text-mauve-400 outline-none transition disabled:cursor-not-allowed focus:border-mauve-600 focus:ring-mauve-200 disabled:bg-slate-100"
     placeholder="Enter quantity"
   />
 

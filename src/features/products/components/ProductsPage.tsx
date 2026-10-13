@@ -81,10 +81,10 @@ function ProductsPage() {
     return (
       <section className="min-w-0 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-mauve-600">
             Products
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-mauve-600">
             Manage your inventory products.
           </p>
         </div>
@@ -92,22 +92,13 @@ function ProductsPage() {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6"
+          className="rounded-xl border border-olive-100 bg-olive-100 p-5 sm:p-6"
         >
-          <div className="flex items-center gap-3">
-            <span
-              className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900"
-              aria-hidden="true"
-            />
-            <p className="text-sm text-slate-600">
-              Loading products...
-            </p>
-          </div>
 
           <div className="mt-6 space-y-3" aria-hidden="true">
-            <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
-            <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
-            <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
+            <div className="h-10 animate-pulse rounded-lg bg-olive-200" />
+            <div className="h-16 animate-pulse rounded-lg bg-olive-200" />
+            <div className="h-16 animate-pulse rounded-lg bg-olive-200" />
           </div>
         </div>
       </section>
@@ -118,10 +109,10 @@ function ProductsPage() {
     return (
       <section className="min-w-0">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-mauve-600">
             Products
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-mauve-600">
             Manage your inventory products.
           </p>
         </div>
@@ -141,7 +132,7 @@ function ProductsPage() {
           <button
             type="button"
             onClick={() => void refetch()}
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-olive-50 transition hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
           >
             Try again
           </button>
@@ -155,24 +146,20 @@ function ProductsPage() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+          <h1 className="text-2xl font-bold text-mauve-600 sm:text-3xl">
             Products
           </h1>
 
-          <p className="mt-1 text-sm text-slate-600 sm:text-base">
+          <p className="mt-1 text-sm text-mauve-600 sm:text-base">
             Manage your inventory products.
           </p>
 
-          <p className="mt-2 text-sm text-slate-500">
-            {products.length}{" "}
-            {products.length === 1 ? "product" : "products"}
-          </p>
         </div>
 
         <button
           type="button"
           onClick={handleAddProduct}
-          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 sm:w-auto"
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-lg bg-mauve-600 px-5 py-2.5 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none sm:w-auto"
         >
           <span className="mr-2 text-lg leading-none" aria-hidden="true">
             +
@@ -183,24 +170,19 @@ function ProductsPage() {
 
       {/* Product form */}
       {isFormOpen && (
-        <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
+              <h2 className="text-lg font-semibold text-mauve-600 sm:text-xl">
                 {selectedProduct ? "Edit Product" : "Add Product"}
               </h2>
 
-              <p className="mt-1 text-sm text-slate-600">
-                {selectedProduct
-                  ? "Update the product details below."
-                  : "Enter the details for your new product."}
-              </p>
             </div>
 
             <button
               type="button"
               onClick={handleCloseForm}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-mauve-600 px-3 py-2 text-sm font-medium bg-mauve-600 text-olive-50 transition hover:bg-mauve-700 focus:outline-none "
             >
               Cancel
             </button>
@@ -237,26 +219,26 @@ function ProductsPage() {
 
       {/* Product list */}
       {products.length === 0 && !isFormOpen ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center sm:px-8">
+        <div className="rounded-xl border border-dashed border-olive-100 bg-olive-100 px-5 py-10 text-center sm:px-8">
           <div
-            className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600"
+            className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-olive-200 text-olive-50"
             aria-hidden="true"
           >
             <span className="text-2xl">+</span>
           </div>
 
-          <h2 className="mt-4 text-lg font-semibold text-slate-900">
+          <h2 className="mt-4 text-lg font-semibold text-mauve-600">
             No products yet
           </h2>
 
-          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-600">
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-mauve-600">
             Add your first product to start managing your inventory.
           </p>
 
           <button
             type="button"
             onClick={handleAddProduct}
-            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-mauve-500 px-5 py-2.5 text-sm font-semibold text-olive-50 transition hover:bg-mauve-600"
           >
             Add your first product
           </button>
@@ -272,7 +254,7 @@ function ProductsPage() {
       )}
 
       {deletingProductId && (
-        <p className="text-sm text-slate-500" role="status">
+        <p className="text-sm text-mauve-600" role="status">
           Deleting product...
         </p>
       )}

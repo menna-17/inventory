@@ -159,7 +159,7 @@ function SaleForm({
                 saving || availableProducts.length === 0
               }
               required
-              className="h-10 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300"
+              className="h-10 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2 text-sm text-mauve-800 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300"
             >
               <option value="">
                 Select a product
@@ -208,7 +208,7 @@ function SaleForm({
               disabled={saving || !selectedProductId}
               required
               placeholder="Enter quantity"
-              className="h-10 w-full rounded-lg border border-mauve-600 px-3 py-2 text-sm text-mauve-600 outline-none transition placeholder:text-mauve-500 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300"
+              className="h-10 w-full rounded-lg border border-mauve-600 px-3 bg-olive-200 py-2 text-sm text-mauve-700 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300"
             />
 
             <p className="mt-1.5 text-xs text-teal-900">

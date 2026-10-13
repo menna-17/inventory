@@ -144,7 +144,7 @@ function SalesHistory({
                   onEmployeeSearchChange(event.target.value)
                 }
                 placeholder="Enter employee name..."
-                className="min-h-11 w-full rounded-lg border border-mauve-500 bg-olive-100 py-2 pl-10 pr-3 text-sm text-mauve-500 outline-none transition placeholder:text-mauve-500 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+                className="min-h-11 w-full rounded-lg border border-mauve-500 bg-olive-200 py-2 pl-10 pr-3 text-sm text-mauve-800 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
               />
             </div>
           </div>
@@ -163,7 +163,7 @@ function SalesHistory({
               type="date"
               value={selectedDate}
               onChange={(event) => onDateChange(event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+              className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
             />
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import type { FormEvent } from "react";
 
@@ -7,7 +6,7 @@ import {
   updateCategory,
 } from "../services/categoryService";
 
-import type { Category } from "../types/product";
+import type { Category } from "../types/category";
 
 type CategoryFormProps = {
   category?: Category | null;
@@ -60,8 +59,12 @@ function CategoryForm({
       return "Category name is required.";
     }
 
-    if (trimmedName.length > 100) {
-      return "Category name must be 100 characters or less.";
+    if (trimmedName.length < 4) {
+      return "Category name must be at least 4 characters.";
+    }
+
+    if (trimmedName.length > 30) {
+      return "Category name must be 30 characters or less.";
     }
 
     return null;
@@ -131,7 +134,7 @@ function CategoryForm({
       <div>
         <label
           htmlFor="category-name"
-          className="block text-sm font-medium text-slate-700"
+          className="block text-sm font-medium text-mauve-600"
         >
           Category name
         </label>
@@ -145,27 +148,28 @@ function CategoryForm({
             setName(event.target.value);
             setError(null);
           }}
-          maxLength={100}
+          minLength={4}
+          maxLength={30}
           autoComplete="off"
-          placeholder="e.g. Electronics"
+          placeholder="e.g. Shoes"
           disabled={isSubmitting}
           required
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "category-name-error" : undefined}
-          className={`mt-1.5 block min-h-11 w-full rounded-lg border bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 sm:text-sm ${
+          className={`mt-2 block min-h-11 w-full rounded-lg border bg-olive-200 px-3 py-2.5 text-base text-mauve-600 outline-none transition placeholder:text-mauve-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300 sm:text-sm ${
             error
               ? "border-red-400 focus:border-red-500 focus:ring-red-100"
-              : "border-slate-300 focus:border-slate-500 focus:ring-slate-200"
+              : "border-olive-200 focus:border-mauve-600 focus:ring-mauve-200"
           }`}
         />
 
         <div className="mt-1.5 flex justify-between gap-3">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-teal-900">
             Use a clear name that helps organize your products.
           </p>
 
-          <span className="shrink-0 text-xs text-slate-400">
-            {name.length}/100
+          <span className="shrink-0 text-xs text-teal-900">
+            {name.length}/30
           </span>
         </div>
       </div>
@@ -180,12 +184,12 @@ function CategoryForm({
         </div>
       )}
 
-      <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+      <div className="mt-6 flex flex-col-reverse gap-3  pt-5 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-olive-200 bg-olive-200 px-4 py-2.5 text-sm font-semibold text-mauve-600 transition hover:bg-olive-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           Cancel
         </button>
@@ -193,7 +197,7 @@ function CategoryForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-mauve-600 px-5 py-2.5 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {isSubmitting ? (
             <>

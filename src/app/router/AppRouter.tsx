@@ -38,7 +38,7 @@ const ProductsPage = lazy(
 const CategoriesPage = lazy(
   () =>
     import(
-      "../../features/products/components/CategoriesPage"
+      "../../features/categories/components/CategoriesPage"
     ),
 );
 
