@@ -5,14 +5,12 @@ import type {
   FormEvent,
 } from "react";
 
-import type {  Product } from "../types/product";
-import type {  Category } from "../../categories/types/category";
+import type { Product } from "../types/product";
+import type { Category } from "../../categories/types/category";
 import {
- 
-  updateProduct
+  updateProduct,
+  createProduct,
 } from "../services/productService";
-import {
-  createProduct} from "../services/productService";
 
 type ProductFormProps = {
   categories: Category[];
@@ -115,13 +113,14 @@ function ProductForm({
     const price = Number(priceText);
     const stockQuantity = Number(stockText);
     const minimumStock = Number(minimumText);
+    const description = formValues.description.trim();
     const imageUrl = formValues.image_url.trim();
 
     if (!name) {
       nextErrors.name = "Product name is required.";
-    } else if (name.length > 150) {
+    } else if (name.length < 3 || name.length > 15) {
       nextErrors.name =
-        "Product name must be 150 characters or less.";
+        "Product name must be between 3 and 15 characters.";
     }
 
     if (!categoryId) {
@@ -137,10 +136,11 @@ function ProductForm({
     } else if (
       !/^\d+(\.\d{1,2})?$/.test(priceText) ||
       !Number.isFinite(price) ||
-      price <= 0
+      price < 2000 ||
+      price > 40000
     ) {
       nextErrors.price =
-        "Enter a valid price greater than 0, with up to 2 decimal places.";
+        "Price must be between 2,000 and 40,000 EGP, with up to 2 decimal places.";
     }
 
     if (!isEditMode) {
@@ -149,10 +149,11 @@ function ProductForm({
           "Initial stock quantity is required.";
       } else if (
         !Number.isSafeInteger(stockQuantity) ||
-        stockQuantity < 0
+        stockQuantity < 10 ||
+        stockQuantity > 40
       ) {
         nextErrors.stock_quantity =
-          "Stock quantity must be a safe, non-negative whole number.";
+          "Initial stock quantity must be a whole number between 10 and 40.";
       }
     }
 
@@ -160,16 +161,20 @@ function ProductForm({
       nextErrors.minimum_stock = "Minimum stock is required.";
     } else if (
       !Number.isSafeInteger(minimumStock) ||
-      minimumStock < 0
+      minimumStock < 2 ||
+      minimumStock > 10
     ) {
       nextErrors.minimum_stock =
-        "Minimum stock must be a safe, non-negative whole number.";
+        "Minimum stock must be a whole number between 2 and 10.";
     }
 
-    if (formValues.description.length > 1000) {
-      nextErrors.description =
-        "Description must be 1000 characters or less.";
-    }
+  if (description.length > 0 && description.length < 20) {
+  nextErrors.description =
+    "Description must be at least 20 characters.";
+} else if (description.length > 40) {
+  nextErrors.description =
+    "Description must be 40 characters or less.";
+}
 
     if (imageUrl) {
       try {
@@ -253,10 +258,10 @@ function ProductForm({
   }
 
   const inputClassName =
-    "mt-1.5 block min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 sm:text-sm";
+    "mt-1.5 block min-h-11 w-full rounded-lg border border-olive-200 bg-olive-200 px-3 py-2.5 text-base text-mauve-500 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-500 disabled:text-mauve-600 sm:text-sm";
 
   const labelClassName =
-    "block text-sm font-medium text-slate-700";
+    "block text-sm font-medium text-mauve-600";
 
   function errorClass(field: keyof FormValues) {
     return errors[field]
@@ -269,7 +274,7 @@ function ProductForm({
       {categories.length === 0 && (
         <div
           role="status"
-          className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+          className="mb-5 rounded-lg border border-mauve-600 bg-mauve-600 p-4 text-sm text-olive-50"
         >
           <p className="font-semibold">No categories available</p>
           <p className="mt-1">
@@ -289,13 +294,14 @@ function ProductForm({
             type="text"
             value={formValues.name}
             onChange={handleChange}
-            maxLength={150}
+            minLength={3}
+            maxLength={15}
             required
             autoComplete="off"
             disabled={isSubmitting}
             aria-invalid={Boolean(errors.name)}
             aria-describedby={errors.name ? "name-error" : undefined}
-            placeholder="e.g. Nike T-Shirt"
+            placeholder="e.g. Ellie"
             className={`${inputClassName} ${errorClass("name")}`}
           />
           {errors.name && (
@@ -344,7 +350,8 @@ function ProductForm({
             id="price"
             name="price"
             type="number"
-            min="0.01"
+            min="2000"
+            max="40000"
             step="0.01"
             inputMode="decimal"
             value={formValues.price}
@@ -353,7 +360,7 @@ function ProductForm({
             disabled={isSubmitting}
             aria-invalid={Boolean(errors.price)}
             aria-describedby={errors.price ? "price-error" : undefined}
-            placeholder="0.00"
+            placeholder="2000"
             className={`${inputClassName} ${errorClass("price")}`}
           />
           {errors.price && (
@@ -371,7 +378,8 @@ function ProductForm({
             id="stock_quantity"
             name="stock_quantity"
             type="number"
-            min="0"
+            min="10"
+            max="40"
             step="1"
             inputMode="numeric"
             value={formValues.stock_quantity}
@@ -386,15 +394,15 @@ function ProductForm({
                   ? "stock_quantity-error"
                   : undefined
             }
-            placeholder="0"
+            placeholder="10"
             className={`${inputClassName} ${
               isEditMode
-                ? "cursor-not-allowed bg-slate-100"
+                ? "cursor-not-allowed bg-mauve-400"
                 : errorClass("stock_quantity")
             }`}
           />
           {isEditMode ? (
-            <p id="stock-help" className="mt-1.5 text-xs leading-5 text-slate-500">
+            <p id="stock-help" className="mt-1.5 text-xs leading-5 text-teal-900">
               To change current stock, use Inventory → Adjust Stock.
             </p>
           ) : (
@@ -414,7 +422,8 @@ function ProductForm({
             id="minimum_stock"
             name="minimum_stock"
             type="number"
-            min="0"
+            min="2"
+            max="10"
             step="1"
             inputMode="numeric"
             value={formValues.minimum_stock}
@@ -425,7 +434,7 @@ function ProductForm({
             aria-describedby={
               errors.minimum_stock ? "minimum_stock-error" : undefined
             }
-            placeholder="0"
+            placeholder="2"
             className={`${inputClassName} ${errorClass("minimum_stock")}`}
           />
           {errors.minimum_stock && (
@@ -439,19 +448,20 @@ function ProductForm({
           <div className="flex items-center justify-between gap-3">
             <label htmlFor="description" className={labelClassName}>
               Description
-              <span className="ml-1 font-normal text-slate-400">
+              <span className="ml-1 font-normal text-teal-900">
                 (optional)
               </span>
             </label>
-            <span className="shrink-0 text-xs text-slate-400">
-              {formValues.description.length}/1000
+            <span className="shrink-0 text-xs text-teal-900">
+              {formValues.description.length}/40
             </span>
           </div>
           <textarea
             id="description"
             name="description"
             rows={4}
-            maxLength={1000}
+            minLength={20}
+            maxLength={40}
             value={formValues.description}
             onChange={handleChange}
             disabled={isSubmitting}
@@ -472,7 +482,7 @@ function ProductForm({
         <div className="min-w-0 sm:col-span-2">
           <label htmlFor="image_url" className={labelClassName}>
             Image URL
-            <span className="ml-1 font-normal text-slate-400">
+            <span className="ml-1 font-normal text-teal-900">
               (optional)
             </span>
           </label>
@@ -511,11 +521,11 @@ function ProductForm({
         </div>
       )}
 
-      <div className="mt-6 border-t border-slate-100 pt-5">
+      <div className="mt-6 border-t border-olive-200 pt-5">
         <button
           type="submit"
           disabled={isSubmitting || categories.length === 0}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-mauve-600 px-5 py-2.5 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {isSubmitting ? (
             <>

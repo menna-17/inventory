@@ -135,7 +135,7 @@ export default function ProductFilters<T extends FilterableItem>({
             id="category-filter"
             value={categoryFilter}
             onChange={(event) => onCategoryChange(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2.5 text-sm text-mauve-800 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2.5 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           >
             <option value="all">All Categories</option>
 
