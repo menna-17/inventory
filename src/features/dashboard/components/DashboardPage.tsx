@@ -35,22 +35,22 @@ function DashboardPage() {
   {[1, 2, 3, 4].map((item) => (
     <div
       key={item}
-      className="animate-pulse rounded-xl border border-olive-200 bg-white p-5"
+      className="animate-pulse rounded-xl border border-olive-100 bg-olive-100 p-5"
     >
-      <div className="h-4 w-28 rounded bg-olive-100" />
-      <div className="mt-4 h-8 w-20 rounded bg-olive-100" />
-      <div className="mt-3 h-3 w-36 max-w-full rounded bg-olive-50" />
+      <div className="h-4 w-28 rounded bg-olive-200" />
+      <div className="mt-4 h-8 w-20 rounded bg-olive-200" />
+      <div className="mt-3 h-3 w-36 max-w-full rounded bg-olive-200" />
     </div>
   ))}
 </div>
 
-<div className="rounded-xl border border-olive-200 bg-white p-6">
-  <div className="h-5 w-36 animate-pulse rounded bg-olive-100" />
-  <div className="mt-4 h-16 animate-pulse rounded bg-olive-50" />
+<div className="rounded-xl border border-olive-100 bg-olive-100 p-6">
+  <div className="h-5 w-36 animate-pulse rounded bg-olive-200" />
+  <div className="mt-4 h-16 animate-pulse rounded bg-olive-200" />
 </div>
 
         <p
-          className="text-sm text-teal-800"
+          className="text-sm text-mauve-600"
           role="status"
         >
           Loading dashboard data...
@@ -90,7 +90,7 @@ function DashboardPage() {
           <button
             type="button"
             onClick={() => void refetch()}
-            className="min-h-11 shrink-0 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            className="min-h-11 shrink-0 rounded-lg border border-red-300 bg-olive-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none "
           >
             Try again
           </button>

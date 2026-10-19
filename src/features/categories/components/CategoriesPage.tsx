@@ -29,20 +29,66 @@ function CategoriesPage() {
   const [selectedCategory, setSelectedCategory] =
     useState<Category | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  const [page, setPage] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const pageParam = Number(searchParams.get("page"));
+
+    return Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+  });
+
+  const [searchTerm, setSearchTerm] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get("search") ?? "";
+  });
+
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(
+    () => new URLSearchParams(window.location.search).get("search")?.trim() ?? "",
+  );
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm.trim());
-      setPage(1);
+      const trimmedSearch = searchTerm.trim();
+
+      setDebouncedSearchTerm((previousSearch) => {
+        if (previousSearch !== trimmedSearch) {
+          setPage(1);
+        }
+
+        return trimmedSearch;
+      });
+
+      const url = new URL(window.location.href);
+
+      if (trimmedSearch) {
+        url.searchParams.set("search", trimmedSearch);
+      } else {
+        url.searchParams.delete("search");
+      }
+
+      if (trimmedSearch !== debouncedSearchTerm) {
+        url.searchParams.delete("page");
+      }
+
+      window.history.replaceState({}, "", url);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [searchTerm]);
+  }, [searchTerm, debouncedSearchTerm]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+
+    if (page === 1) {
+      url.searchParams.delete("page");
+    } else {
+      url.searchParams.set("page", String(page));
+    }
+
+    window.history.replaceState({}, "", url);
+  }, [page]);
 
   const filteredCategories = useMemo(() => {
     const normalizedSearch = debouncedSearchTerm.toLowerCase();
@@ -110,6 +156,13 @@ function CategoriesPage() {
 
         setCategories(data);
         setError(null);
+
+        setPage((currentPage) =>
+          Math.min(
+            currentPage,
+            Math.max(1, Math.ceil(data.length / PAGE_SIZE)),
+          ),
+        );
       } catch (error) {
         if (cancelled) return;
 
@@ -206,7 +259,7 @@ function CategoriesPage() {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-olive-100 bg-olove-100 p-5 sm:p-6"
+          className="rounded-xl border border-olive-100 bg-olive-100 p-5 sm:p-6"
         >
           <div
             className="mt-5 space-y-3"
@@ -243,7 +296,7 @@ function CategoriesPage() {
         <button
           type="button"
           onClick={handleAddCategory}
-          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-mauve-600 px-5 py-2.5 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none focus:ring-2 sm:w-auto"
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-mauve-600 px-5 py-2.5 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none sm:w-auto"
         >
           <span className="text-lg leading-none" aria-hidden="true">
             +
@@ -281,9 +334,11 @@ function CategoriesPage() {
         <div className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-mauve-600 sm:text-xl">
-                {selectedCategory ? "Edit Category" : "Add Category"}
-              </h2>
+              <div className="inline-block rounded-lg bg-teal-900 px-12 py-2">
+                <h2 className="text-lg font-semibold text-olive-50 sm:text-xl">
+                  {selectedCategory ? "Edit Category" : "Add Category"}
+                </h2>
+              </div>
             </div>
 
             <button
@@ -310,9 +365,7 @@ function CategoriesPage() {
           <label
             htmlFor="category-name-search"
             className="mb-1.5 block text-sm font-medium text-mauve-600"
-          >
-           
-          </label>
+          ></label>
 
           <input
             id="category-name-search"
@@ -320,7 +373,7 @@ function CategoriesPage() {
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search category name..."
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2.5 text-sm text-mauve-600 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-sm text-mauve-600 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           />
         </div>
       )}
@@ -381,7 +434,7 @@ function CategoriesPage() {
               return (
                 <article
                   key={category.id}
-                  className="min-w-0 rounded-xl border border-olive-200 bg-olive-200 p-4 shadow-sm"
+                  className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm"
                 >
                   <h3 className="break-words font-semibold text-mauve-600">
                     {category.name}
@@ -435,17 +488,17 @@ function CategoriesPage() {
 
                     <th
                       scope="col"
-                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900"
+                      className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
                     >
                       Created
                     </th>
 
                     <th
-                      scope="col"
-                      className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-teal-900"
-                    >
-                      Actions
-                    </th>
+  scope="col"
+  className="w-1 whitespace-nowrap px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900"
+>
+  Actions
+</th>
                   </tr>
                 </thead>
 
@@ -464,14 +517,14 @@ function CategoriesPage() {
                           </span>
                         </td>
 
-                        <td className="whitespace-nowrap px-5 py-4 text-sm text-mauve-600">
+                        <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-mauve-600">
                           {category.created_at
                             ? new Date(category.created_at).toLocaleDateString()
                             : "—"}
                         </td>
 
-                        <td className="px-5 py-4">
-                          <div className="flex justify-end gap-2">
+                        <td className="whitespace-nowrap px-5 py-4">
+                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleEditCategory(category)}

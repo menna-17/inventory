@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -50,15 +49,39 @@ function InventoryPage() {
   const inventoryTableRef = useRef<HTMLDivElement>(null);
   const shouldScrollToInventoryRef = useRef(false);
 
+  // Prevent the initial filter application from resetting the restored page.
+  const skipInitialFilterEffectRef = useRef(true);
+
+  // Prevent the initial URL synchronization from overwriting saved parameters.
+  const skipInitialUrlSyncRef = useRef(true);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryError, setCategoryError] = useState<string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  // Restore filter values from the URL.
+  const [searchTerm, setSearchTerm] = useState(
+    () => searchParams.get("search") ?? "",
+  );
+
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>(
+    () => (searchParams.get("status") as FilterStatus | null) ?? "all",
+  );
+
+  const [categoryFilter, setCategoryFilter] = useState(
+    () => searchParams.get("category") ?? "all",
+  );
 
   const [movements, setMovements] = useState<StockMovement[]>([]);
-  const [movementPage, setMovementPage] = useState(1);
+
+  // Restore the stock movement page from the URL.
+  const [movementPage, setMovementPage] = useState(() => {
+    const parsedPage = Number(searchParams.get("movementPage"));
+
+    return Number.isSafeInteger(parsedPage) && parsedPage > 0
+      ? parsedPage
+      : 1;
+  });
+
   const [movementTotalPages, setMovementTotalPages] = useState(0);
   const [movementTotalCount, setMovementTotalCount] = useState(0);
   const [isLoadingMovements, setIsLoadingMovements] = useState(true);
@@ -84,6 +107,28 @@ function InventoryPage() {
     ? selectedItem ?? productFromUrl
     : null;
 
+  /*
+   * Restore the saved inventory page and apply the saved filters on mount.
+   * Apply the page after filters in case setFilters resets pagination.
+   */
+  useEffect(() => {
+    const parsedPage = Number(searchParams.get("page"));
+    const savedPage =
+      Number.isSafeInteger(parsedPage) && parsedPage > 0
+        ? parsedPage
+        : 1;
+
+    setFilters({
+      searchTerm: searchTerm.trim(),
+      statusFilter,
+      categoryFilter,
+    });
+
+    setPage(savedPage);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Mark intentional inventory pagination changes for scrolling.
   function handleInventoryPageChange(nextPage: number) {
     if (nextPage === page) return;
@@ -96,44 +141,91 @@ function InventoryPage() {
    * Scroll after the inventory page has finished loading.
    * This does not respond to stock movement pagination.
    */
+  useEffect(() => {
+    if (isLoading || !shouldScrollToInventoryRef.current) return;
 
-useEffect(() => {
-  if (isLoading || !shouldScrollToInventoryRef.current) return;
+    shouldScrollToInventoryRef.current = false;
 
-  shouldScrollToInventoryRef.current = false;
+    window.requestAnimationFrame(() => {
+      const table = inventoryTableRef.current;
+      if (!table) return;
 
-  window.requestAnimationFrame(() => {
-    const table = inventoryTableRef.current;
-    if (!table) return;
+      const top = table.getBoundingClientRect().top + window.scrollY;
 
-    const top = table.getBoundingClientRect().top + window.scrollY;
-
-    window.scrollTo({
-      top: Math.max(0, top - 100),
-      behavior: "smooth",
+      window.scrollTo({
+        top: Math.max(0, top - 100),
+        behavior: "smooth",
+      });
     });
-  });
-}, [page, isLoading]);
-
+  }, [page, isLoading]);
 
   /*
-   * Apply filters through the inventory hook.
-   * Search is debounced to avoid querying for every keystroke.
-   * The hook should reset the inventory page to page 1 when filters change.
+   * Apply filters when they change.
+   * Skip the initial effect because the initial restoration effect
+   * above has already applied the URL filters.
    */
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setFilters({
-        searchTerm: searchTerm.trim(),
-        statusFilter,
-        categoryFilter,
-      });
-    }, 300);
+    if (skipInitialFilterEffectRef.current) {
+      skipInitialFilterEffectRef.current = false;
+      return;
+    }
 
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
+    setFilters({
+      searchTerm: searchTerm.trim(),
+      statusFilter,
+      categoryFilter,
+    });
   }, [searchTerm, statusFilter, categoryFilter, setFilters]);
+
+  /*
+   * Save the inventory page and filters in the URL.
+   * Preserve other parameters, including productId.
+   */
+  useEffect(() => {
+    if (skipInitialUrlSyncRef.current) {
+      skipInitialUrlSyncRef.current = false;
+      return;
+    }
+
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+
+        if (page > 1) {
+          next.set("page", String(page));
+        } else {
+          next.delete("page");
+        }
+
+        if (searchTerm.trim()) {
+          next.set("search", searchTerm.trim());
+        } else {
+          next.delete("search");
+        }
+
+        if (statusFilter !== "all") {
+          next.set("status", statusFilter);
+        } else {
+          next.delete("status");
+        }
+
+        if (categoryFilter !== "all") {
+          next.set("category", categoryFilter);
+        } else {
+          next.delete("category");
+        }
+
+        return next;
+      },
+      { replace: true },
+    );
+  }, [
+    page,
+    searchTerm,
+    statusFilter,
+    categoryFilter,
+    setSearchParams,
+  ]);
 
   /*
    * Load one page of stock movements.
@@ -165,15 +257,36 @@ useEffect(() => {
     }
   }, []);
 
+  // Load the stock movement page restored from the URL.
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void loadMovements(1);
+      void loadMovements(movementPage);
     }, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadMovements]);
+
+  // Save the stock movement page in the URL without removing other parameters.
+  useEffect(() => {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+
+        if (movementPage > 1) {
+          next.set("movementPage", String(movementPage));
+        } else {
+          next.delete("movementPage");
+        }
+
+        return next;
+      },
+      { replace: true },
+    );
+  }, [movementPage, setSearchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,7 +332,15 @@ useEffect(() => {
     setSaveError(null);
     setNotice(null);
 
-    setSearchParams({ productId: item.id }, { replace: true });
+    // Preserve the page and filters when opening the adjustment modal.
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.set("productId", item.id);
+        return next;
+      },
+      { replace: true },
+    );
   }
 
   function closeAdjustment() {
@@ -230,7 +351,15 @@ useEffect(() => {
     setQuantity("");
     setSaveError(null);
 
-    setSearchParams({}, { replace: true });
+    // Remove only the modal parameter.
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.delete("productId");
+        return next;
+      },
+      { replace: true },
+    );
   }
 
   async function handleSaveAdjustment() {
@@ -279,13 +408,23 @@ useEffect(() => {
     setSelectedItem(null);
     setAdjustmentType("add");
     setQuantity("");
-    setSearchParams({}, { replace: true });
+
+    // Remove only productId so saved pagination and filters remain.
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.delete("productId");
+        return next;
+      },
+      { replace: true },
+    );
+
     setIsSaving(false);
 
-    // Refresh the current inventory page and show the newest movement.
+    // Refresh the current inventory page and current movement page.
     const refreshResults = await Promise.allSettled([
       refetch(),
-      loadMovements(1),
+      loadMovements(movementPage),
     ]);
 
     if (refreshResults.some((result) => result.status === "rejected")) {
@@ -304,13 +443,13 @@ useEffect(() => {
           Inventory
         </h1>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 space-y-3 bg-olive-100">
           <div className="h-5 w-40 animate-pulse rounded bg-olive-200" />
-          <div className="h-24 animate-pulse rounded-xl bg-olive-100" />
-          <div className="h-24 animate-pulse rounded-xl bg-olive-100" />
+          <div className="h-24 animate-pulse rounded-xl bg-olive-200" />
+          <div className="h-24 animate-pulse rounded-xl bg-olive-200" />
         </div>
 
-        <p className="sr-only" aria-live="polite">
+        <p className="sr-only text-mauve-600" aria-live="polite">
           Loading inventory...
         </p>
       </section>
@@ -334,7 +473,7 @@ useEffect(() => {
           <button
             type="button"
             onClick={() => void refetch()}
-            className="mt-4 min-h-11 w-full rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 sm:w-auto"
+            className="mt-4 min-h-11 w-full rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-olive-50 hover:bg-red-800 sm:w-auto"
           >
             Try again
           </button>
@@ -359,7 +498,7 @@ useEffect(() => {
       {notice && (
         <div
           role="status"
-          className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800"
+          className="rounded-lg border border-teal-900 bg-teal-600 p-4 text-sm text-olive-50"
         >
           {notice}
         </div>
@@ -434,7 +573,7 @@ useEffect(() => {
 
       {items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-olive-100 bg-olive-100 px-5 py-10 text-center">
-          <h2 className="text-lg font-semibold text-teal-900">
+          <h2 className="text-lg font-semibold text-mauve-600">
             {searchTerm.trim() ||
             statusFilter !== "all" ||
             categoryFilter !== "all"
@@ -442,7 +581,7 @@ useEffect(() => {
               : "No inventory available"}
           </h2>
 
-          <p className="mt-2 text-sm text-teal-900">
+          <p className="mt-2 text-sm text-mauve-600">
             {searchTerm.trim() ||
             statusFilter !== "all" ||
             categoryFilter !== "all"

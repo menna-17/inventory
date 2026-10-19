@@ -240,7 +240,7 @@ function AppLayout() {
     <div className="min-h-screen bg-olive-50">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:p-3 focus:text-teal-900 focus:ring-2 focus:ring-teal-700"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-olive-50 focus:p-3 focus:text-teal-900 "
       >
         Skip to main content
       </a>

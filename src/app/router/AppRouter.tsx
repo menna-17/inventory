@@ -71,7 +71,7 @@ const AuditHistoryPage = lazy(
 
 function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
+    <main className="flex min-h-screen items-center justify-center bg-olive-50 px-6">
       <LoginForm />
     </main>
   );
@@ -101,8 +101,8 @@ function AppRouter() {
     <BrowserRouter>
       <Suspense
         fallback={
-          <main className="flex min-h-screen items-center justify-center bg-slate-50">
-            <p className="text-sm text-slate-600">
+          <main className="flex min-h-screen items-center justify-center bg-olive-50">
+            <p className="text-sm text-mauve-600">
               Loading page...
             </p>
           </main>

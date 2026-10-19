@@ -1,5 +1,5 @@
 
-import { useEffect, useRef,useState  } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { StockMovement } from "../types/inventory";
 import Pagination from "../../../components/ui/Pagination";
@@ -32,7 +32,7 @@ function ProductThumbnail({
   imageUrl?: string | null;
   productName: string;
 }) {
-  const [imageFailed, setImageFailed] =useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   if (!imageUrl || imageFailed) {
     return (
@@ -52,7 +52,7 @@ function ProductThumbnail({
       alt={productName}
       loading="lazy"
       onError={() => setImageFailed(true)}
-      className="h-10 w-10 shrink-0 rounded-lg border border-olive-200 bg-olive-100 "
+      className="h-10 w-10 shrink-0 rounded-lg border border-olive-100 bg-olive-100 "
     />
   );
 }
@@ -116,10 +116,6 @@ function StockMovementHistory({
         <h2 className="text-xl font-semibold text-mauve-600">
           Stock Movement History
         </h2>
-
-        <p className="mt-1 text-sm text-mauve-600">
-          Track when stock was added or removed and who made the change.
-        </p>
       </div>
 
       {isLoading && movements.length === 0 && !error && (
@@ -128,10 +124,10 @@ function StockMovementHistory({
           aria-busy="true"
         >
           <div className="h-4 w-40 animate-pulse rounded bg-olive-200" />
-          <div className="h-12 animate-pulse rounded-lg bg-olive-100" />
-          <div className="h-12 animate-pulse rounded-lg bg-olive-100" />
+          <div className="h-12 animate-pulse rounded-lg bg-olive-200" />
+          <div className="h-12 animate-pulse rounded-lg bg-olive-200" />
 
-          <p className="sr-only" aria-live="polite">
+          <p className="sr-only text-mauve-600" aria-live="polite">
             Loading stock history...
           </p>
         </div>
@@ -151,7 +147,7 @@ function StockMovementHistory({
           <button
             type="button"
             onClick={onRetry}
-            className="mt-3 min-h-11 w-full rounded-lg bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto"
+            className="mt-3 min-h-11 w-full rounded-lg bg-red-700 px-4 py-2 font-medium text-olive-50 hover:bg-red-800 sm:w-auto"
           >
             Try again
           </button>
@@ -259,26 +255,26 @@ function StockMovementHistory({
 
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
-              <table className="min-w-full divide-y divide-olive-200">
+              <table className="w-full table-auto divide-y divide-olive-200">
                 <thead className="bg-olive-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
                       Product
                     </th>
 
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
+                    <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                       Action
                     </th>
 
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
+                    <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                       Quantity
                     </th>
 
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
+                    <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                       User
                     </th>
 
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
+                    <th className="w-1 whitespace-nowrap px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                       Date
                     </th>
                   </tr>
@@ -305,7 +301,7 @@ function StockMovementHistory({
                           </div>
                         </td>
 
-                        <td className="whitespace-nowrap px-6 py-4">
+                        <td className="whitespace-nowrap px-6 py-4 text-center">
                           <span
                             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
                               movement.movement_type === "add"
@@ -319,15 +315,15 @@ function StockMovementHistory({
                           </span>
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-mauve-600">
+                        <td className="px-6 py-4 text-center text-sm text-mauve-600">
                           {movement.quantity}
                         </td>
 
-                        <td className="max-w-xs break-words px-6 py-4 text-sm text-teal-900">
+                        <td className="max-w-xs break-words px-6 py-4 text-center text-sm text-teal-900">
                           {movement.user?.full_name ?? "Unknown User"}
                         </td>
 
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-mauve-600">
+                        <td className="whitespace-nowrap px-6 py-4 text-center text-sm text-mauve-600">
                           {formatDate(movement.created_at)}
                         </td>
                       </tr>

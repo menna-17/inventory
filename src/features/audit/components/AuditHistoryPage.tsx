@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { supabase } from "../../../lib/supabase";
@@ -79,7 +78,7 @@ function getActionStyle(action: string): string {
     return "bg-red-700 text-olive-50 ring-red-600/20";
   }
 
-  return "bg-slate-100 text-slate-700 ring-slate-500/20";
+  return "bg-mauve-600 text-olive-50 ring-mauve-500/20";
 }
 
 function AuditHistoryPage() {
@@ -88,12 +87,40 @@ function AuditHistoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedUser, setSelectedUser] = useState("");
-  const [selectedActivity, setSelectedActivity] = useState("all");
-  const [page, setPage] = useState(1);
+  const [selectedDate, setSelectedDate] = useState(
+    () => new URLSearchParams(window.location.search).get("date") ?? "",
+  );
+  const [selectedUser, setSelectedUser] = useState(
+    () => new URLSearchParams(window.location.search).get("user") ?? "",
+  );
+  const [selectedActivity, setSelectedActivity] = useState(
+    () => new URLSearchParams(window.location.search).get("activity") ?? "all",
+  );
+  
+  const [page, setPage] = useState(() => {
+    const pageParam = Number(
+      new URLSearchParams(window.location.search).get("page"),
+    );
+    return Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+  });
 
   const auditHistoryRef = useRef<HTMLElement>(null);
+
+  // Restore pagination and filters when the user navigates with browser Back/Forward
+  useEffect(() => {
+    function handlePopState() {
+      const params = new URLSearchParams(window.location.search);
+      const pageParam = Number(params.get("page"));
+
+      setSelectedDate(params.get("date") ?? "");
+      setSelectedUser(params.get("user") ?? "");
+      setSelectedActivity(params.get("activity") ?? "all");
+      setPage(Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,25 +173,67 @@ function AuditHistoryPage() {
     setSelectedUser("");
     setSelectedActivity("all");
     setPage(1);
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("date");
+    url.searchParams.delete("user");
+    url.searchParams.delete("activity");
+    url.searchParams.delete("page");
+    window.history.replaceState(window.history.state, "", url);
   }
 
   function handleDateChange(date: string) {
     setSelectedDate(date);
     setPage(1);
+
+    const url = new URL(window.location.href);
+    if (date) {
+      url.searchParams.set("date", date);
+    } else {
+      url.searchParams.delete("date");
+    }
+    url.searchParams.delete("page");
+    window.history.replaceState(window.history.state, "", url);
   }
 
   function handleUserChange(user: string) {
     setSelectedUser(user);
     setPage(1);
+
+    const url = new URL(window.location.href);
+    if (user) {
+      url.searchParams.set("user", user);
+    } else {
+      url.searchParams.delete("user");
+    }
+    url.searchParams.delete("page");
+    window.history.replaceState(window.history.state, "", url);
   }
 
   function handleActivityChange(activity: string) {
     setSelectedActivity(activity);
     setPage(1);
+
+    const url = new URL(window.location.href);
+    if (activity !== "all") {
+      url.searchParams.set("activity", activity);
+    } else {
+      url.searchParams.delete("activity");
+    }
+    url.searchParams.delete("page");
+    window.history.replaceState(window.history.state, "", url);
   }
 
   function handlePageChange(nextPage: number) {
     setPage(nextPage);
+
+    const url = new URL(window.location.href);
+    if (nextPage > 1) {
+      url.searchParams.set("page", String(nextPage));
+    } else {
+      url.searchParams.delete("page");
+    }
+    window.history.replaceState(window.history.state, "", url);
 
     auditHistoryRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -172,34 +241,33 @@ function AuditHistoryPage() {
     });
   }
 
-  const filteredLogs = useMemo(
-    () =>
-      logs.filter((log) => {
-        const matchesDate =
-          !selectedDate ||
-          getLocalDateKey(log.created_at) === selectedDate;
+  const filteredLogs = logs.filter((log) => {
+    const matchesDate =
+      !selectedDate ||
+      getLocalDateKey(log.created_at) === selectedDate;
 
-        const matchesUser =
-          !selectedUser ||
-          (log.user_name || "Unknown user")
-            .toLowerCase()
-            .includes(selectedUser.toLowerCase());
+    const matchesUser =
+      !selectedUser ||
+      (log.user_name || "Unknown user")
+        .toLowerCase()
+        .includes(selectedUser.toLowerCase());
 
-        const matchesActivity =
-          selectedActivity === "all" ||
-          log.action === selectedActivity;
+    const matchesActivity =
+      selectedActivity === "all" ||
+      log.action === selectedActivity;
 
-        return matchesDate && matchesUser && matchesActivity;
-      }),
-    [logs, selectedDate, selectedUser, selectedActivity],
-  );
+    return matchesDate && matchesUser && matchesActivity;
+  });
 
-  const totalPages = Math.ceil(filteredLogs.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
+
+  // Ensure currentPage never exceeds totalPages after filtering changes
+  const currentPage = Math.max(1, Math.min(page, totalPages));
 
   const paginatedLogs = useMemo(() => {
-    const startIndex = (page - 1) * PAGE_SIZE;
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
     return filteredLogs.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredLogs, page]);
+  }, [filteredLogs, currentPage]);
 
   return (
     <section
@@ -219,7 +287,7 @@ function AuditHistoryPage() {
 
         {!loading && !error && (
           <div className="rounded-lg border border-olive-100 bg-olive-100 px-4 py-2">
-            <p className="text-xs text-teal-900">
+            <p className="text-xs text-mauve-600">
               Total records loaded
             </p>
 
@@ -235,11 +303,11 @@ function AuditHistoryPage() {
           className="space-y-3 rounded-xl border border-olive-100 bg-olive-100 p-6 sm:p-10"
           aria-busy="true"
         >
-          <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
-          <div className="h-12 animate-pulse rounded-lg bg-slate-100" />
-          <div className="h-12 animate-pulse rounded-lg bg-slate-100" />
+          <div className="h-4 w-40 animate-pulse rounded bg-olive-200" />
+          <div className="h-12 animate-pulse rounded-lg bg-olive-200" />
+          <div className="h-12 animate-pulse rounded-lg bg-olive-200" />
 
-          <p className="sr-only" aria-live="polite">
+          <p className="sr-only text-mauve-600" aria-live="polite">
             Loading audit history...
           </p>
         </div>
@@ -259,7 +327,7 @@ function AuditHistoryPage() {
           <button
             type="button"
             onClick={handleRetry}
-            className="mt-4 min-h-11 w-full rounded-lg bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto"
+            className="mt-4 min-h-11 w-full rounded-lg bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-2  sm:w-auto"
           >
             Try again
           </button>
@@ -666,7 +734,7 @@ function AuditHistoryPage() {
           {/* Pagination is outside the table container */}
           <div className=" pt-2">
             <Pagination
-              page={page}
+              page={currentPage}
               totalPages={totalPages}
               totalCount={filteredLogs.length}
               pageSize={PAGE_SIZE}

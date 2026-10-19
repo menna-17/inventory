@@ -62,18 +62,13 @@ function StockAdjustmentModal({
 <section
   id="adjust-stock-form"
   aria-labelledby="stock-adjustment-title"
-  className="mb-6 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm sm:p-6"
+  className="mb-6 rounded-xl border border-olive-200 bg-olive-200 p-4 shadow-sm sm:p-6"
 >
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2
-            id="stock-adjustment-title"
-            className="text-lg font-semibold text-mauve-600"
-          >
-            Adjust Stock
-          </h2>
+         
 
           <p className="mt-1 break-words text-sm text-teal-900">
             Product:{" "}
@@ -181,7 +176,7 @@ function StockAdjustmentModal({
         ? "stock-adjustment-error"
         : "stock-quantity-help"
     }
-    className="mt-1 block min-h-11 w-full max-w-xs rounded-lg border bg-olive-200 border-mauve-600 px-3 py-2 text-base text-mauve-600 placeholder:text-mauve-400 outline-none transition disabled:cursor-not-allowed focus:border-mauve-600 focus:ring-mauve-200 disabled:bg-slate-100"
+    className="mt-1 block min-h-11 w-full max-w-xs rounded-lg border bg-olive-100 border-mauve-600 px-3 py-2 text-base text-mauve-600 placeholder:text-mauve-400 outline-none transition disabled:cursor-not-allowed focus:border-mauve-600 focus:ring-mauve-200 disabled:bg-mauve-200"
     placeholder="Enter quantity"
   />
 
@@ -196,7 +191,7 @@ function StockAdjustmentModal({
 
       {/* Stock preview */}
       <div
-        className="mt-4 rounded-lg bg-olive-200 p-4"
+        className="mt-4 rounded-lg bg-olive-100 p-4"
         aria-live="polite"
         aria-atomic="true"
       >
@@ -272,7 +267,7 @@ function StockAdjustmentModal({
           type="button"
           onClick={onClose}
           disabled={isSaving}
-          className="min-h-11 w-full rounded-lg border border-mauve-600 px-4 py-2 text-sm font-medium text-olive-50 bg-mauve-600 transition hover:bg-mauve-700 fo   disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="min-h-11 w-full rounded-lg border border-mauve-600 px-4 py-2 text-sm font-medium text-olive-50 bg-mauve-600 transition hover:bg-mauve-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           Cancel
         </button>
@@ -281,7 +276,7 @@ function StockAdjustmentModal({
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-mauve-600 px-4 py-2 text-sm font-medium text-olive-50 transition hover:bg-mauve-700   disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-mauve-600 px-4 py-2 text-sm font-medium text-olive-50 transition hover:bg-mauve-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {isSaving && (
             <span

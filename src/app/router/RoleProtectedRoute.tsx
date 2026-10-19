@@ -32,7 +32,7 @@ function RoleProtectedRoute({
         className="flex min-h-screen items-center justify-center"
         aria-live="polite"
       >
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-mauve-600">
           Loading account permissions...
         </p>
       </main>
@@ -52,11 +52,11 @@ function RoleProtectedRoute({
   if (error) {
     return (
       <main
-        className="flex min-h-screen items-center justify-center bg-slate-50 px-6"
+        className="flex min-h-screen items-center justify-center bg-olive-50 px-6"
         aria-live="polite"
       >
-        <div className="w-full max-w-md rounded-lg border border-red-200 bg-white p-6 shadow-sm">
-          <h1 className="text-lg font-semibold text-slate-900">
+        <div className="w-full max-w-md rounded-lg border border-red-200 bg-olive-50 p-6 shadow-sm">
+          <h1 className="text-lg font-semibold text-mauve-600">
             Unable to load your account
           </h1>
 
@@ -71,15 +71,15 @@ function RoleProtectedRoute({
   if (!role || !allowedRoles.includes(role)) {
     return (
       <main
-        className="flex min-h-screen items-center justify-center bg-slate-50 px-6"
+        className="flex min-h-screen items-center justify-center bg-olive-50 px-6"
         aria-live="polite"
       >
-        <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
-          <h1 className="text-xl font-semibold text-slate-900">
+        <div className="w-full max-w-md rounded-lg border border-olive-50 bg-olive-50 p-6 text-center shadow-sm">
+          <h1 className="text-xl font-semibold text-mauve-600">
             Access denied
           </h1>
 
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-mauve-600">
             You do not have permission to access
             this page.
           </p>
@@ -91,7 +91,7 @@ function RoleProtectedRoute({
                 replace: true,
               })
             }
-            className="mt-5 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="mt-5 rounded-md bg-mauve-600 px-4 py-2 text-sm font-medium text-olive-50 hover:bg-mauve-700"
           >
             Go to dashboard
           </button>

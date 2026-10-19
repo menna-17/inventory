@@ -156,7 +156,7 @@ function CategoryForm({
           required
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "category-name-error" : undefined}
-          className={`mt-2 block min-h-11 w-full rounded-lg border bg-olive-200 px-3 py-2.5 text-base text-mauve-600 outline-none transition placeholder:text-mauve-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-mauve-200 disabled:text-mauve-300 sm:text-sm ${
+          className={`mt-2 block min-h-11 w-full rounded-lg border bg-olive-200 px-3 py-2.5 text-base text-mauve-600 outline-none transition placeholder:text-mauve-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-olive-50 disabled:text-mauve-300 sm:text-sm ${
             error
               ? "border-red-400 focus:border-red-500 focus:ring-red-100"
               : "border-olive-200 focus:border-mauve-600 focus:ring-mauve-200"

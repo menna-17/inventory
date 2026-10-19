@@ -2,6 +2,7 @@
 import { useState } from "react";
 
 import type { Sale } from "../types/sales";
+import SalesFilters from "./SalesFilters";
 
 type SalesHistoryProps = {
   sales: Sale[];
@@ -9,6 +10,7 @@ type SalesHistoryProps = {
   description?: string;
   titleClassName?: string;
   descriptionClassName?: string;
+  showFilters?: boolean;
   employeeSearch?: string;
   selectedDate?: string;
   onEmployeeSearchChange?: (value: string) => void;
@@ -16,6 +18,7 @@ type SalesHistoryProps = {
   onClearFilters?: () => void;
   totalFilteredCount?: number;
 };
+
 function formatDate(date: string) {
   const parsedDate = new Date(date);
 
@@ -77,6 +80,7 @@ function SalesHistory({
   description = "View previous sales, who processed them, and their dates.",
   titleClassName = "text-xl font-bold text-mauve-600",
   descriptionClassName = "mt-1 text-sm text-mauve-600",
+  showFilters = false,
   employeeSearch = "",
   selectedDate = "",
   onEmployeeSearchChange,
@@ -84,12 +88,6 @@ function SalesHistory({
   onClearFilters,
   totalFilteredCount = 0,
 }: SalesHistoryProps) {
-  const hasActiveFilters = Boolean(
-    employeeSearch.trim() || selectedDate,
-  );
-
-
-
   return (
     <section className="relative mt-1 min-w-0 space-y-4 pb-6">
       {/* Header */}
@@ -107,84 +105,17 @@ function SalesHistory({
         <p className={descriptionClassName}>{description}</p>
       </div>
 
-      {/* Filters directly below the Sales History heading */}
-      <div className="rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm sm:p-5">
-        
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {/* Search by employee name */}
-          <div className="min-w-0">
-            <label
-              htmlFor="sales-employee-search"
-              className="mb-1.5 block text-sm font-medium text-mauve-600"
-            >
-              Search by employee name
-            </label>
-
-            <div className="relative">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-mauve-600"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path
-                  strokeLinecap="round"
-                  d="m16 16 4 4"
-                />
-              </svg>
-
-              <input
-                id="sales-employee-search"
-                type="search"
-                value={employeeSearch}
-                onChange={(event) =>
-                  onEmployeeSearchChange(event.target.value)
-                }
-                placeholder="Enter employee name..."
-                className="min-h-11 w-full rounded-lg border border-mauve-500 bg-olive-200 py-2 pl-10 pr-3 text-sm text-mauve-800 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
-              />
-            </div>
-          </div>
-
-          {/* Search by date */}
-          <div className="min-w-0">
-            <label
-              htmlFor="sales-date-search"
-              className="mb-1.5 block text-sm font-medium text-mauve-600"
-            >
-              Search by date
-            </label>
-
-            <input
-              id="sales-date-search"
-              type="date"
-              value={selectedDate}
-              onChange={(event) => onDateChange(event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
-            />
-          </div>
-        </div>
-
-        {hasActiveFilters && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3  pt-3">
-            <p className="text-sm text-teal-900" aria-live="polite">
-              {totalFilteredCount}{" "}
-              {totalFilteredCount === 1 ? "sale" : "sales"} found
-            </p>
-
-            <button
-              type="button"
-              onClick={onClearFilters}
-              className="min-h-10 rounded-lg border border-mauve-600 bg-mauve-600 px-4 py-2 text-sm font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none  "
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Sales filters - directly below the heading and description */}
+      {showFilters && (
+        <SalesFilters
+          employeeSearch={employeeSearch}
+          selectedDate={selectedDate}
+          onEmployeeSearchChange={onEmployeeSearchChange}
+          onDateChange={onDateChange}
+          onClearFilters={onClearFilters}
+          totalFilteredCount={totalFilteredCount}
+        />
+      )}
 
       {/* Empty state */}
       {sales.length === 0 ? (
@@ -209,13 +140,11 @@ function SalesHistory({
           </div>
 
           <h3 className="mt-3 text-sm font-semibold text-mauve-600">
-            {hasActiveFilters ? "No matching sales" : "No sales yet"}
+            No sales yet
           </h3>
 
           <p className="mx-auto mt-1 max-w-sm text-sm text-teal-900">
-            {hasActiveFilters
-              ? "Try a different employee name or date, or clear the filters to see all sales."
-              : "Completed sales will appear here when a sale is processed."}
+            Completed sales will appear here when a sale is processed.
           </p>
         </div>
       ) : (
@@ -312,86 +241,89 @@ function SalesHistory({
 
           {/* Tablet and desktop table */}
           <div className="hidden max-w-full overflow-x-auto rounded-xl md:block">
-       
-<table className="min-w-full divide-y divide-olive-100 text-sm">
-  <thead className="bg-olive-200">
-    <tr>
-      <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
-        Product
-      </th>
-      <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
-        Quantity
-      </th>
-      <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
-        Unit Price
-      </th>
-      <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
-        Sale Total
-      </th>
-      <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
-        Processed By
-      </th>
-      <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
-        Date
-      </th>
-    </tr>
-  </thead>
+            <table className="min-w-full divide-y divide-olive-100 text-sm">
+              <thead className="bg-olive-200">
+                <tr>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                    Product
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                    Quantity
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                    Unit Price
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                    Sale Total
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                    Processed By
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                    Date
+                  </th>
+                </tr>
+              </thead>
 
-  <tbody className="divide-y divide-olive-100">
-    {sales.map((sale) =>
-      sale.items.length === 0 ? (
-        <tr key={sale.id}>
-          <td colSpan={6} className="px-4 py-4 text-teal-900">
-            Sale has no items.
-          </td>
-        </tr>
-      ) : (
-        sale.items.map((item, index) => {
-          const productName = item.product?.name ?? "Unknown Product";
+              <tbody className="divide-y divide-olive-200">
+                {sales.map((sale) =>
+                  sale.items.length === 0 ? (
+                    <tr key={sale.id}>
+                      <td colSpan={6} className="px-4 py-4 text-teal-900">
+                        Sale has no items.
+                      </td>
+                    </tr>
+                  ) : (
+                    sale.items.map((item, index) => {
+                      const productName =
+                        item.product?.name ?? "Unknown Product";
 
-          return (
-            <tr
-              key={`${sale.id}-${item.product?.name ?? "item"}-${index}`}
-              className="align-middle transition hover:bg-olive-50"
-            >
-              <td className="max-w-xs break-words px-4 py-4 font-medium text-teal-900">
-                <div className="flex items-center gap-3">
-                  <ProductThumbnail
-                    imageUrl={item.product?.image_url}
-                    productName={productName}
-                  />
+                      return (
+                        <tr
+                          key={`${sale.id}-${item.product?.name ?? "item"}-${index}`}
+                          className="align-middle transition hover:bg-olive-50"
+                        >
+                          <td className="max-w-xs break-words px-4 py-4 font-medium text-teal-900">
+                            <div className="flex items-center gap-3">
+                              <ProductThumbnail
+                                imageUrl={item.product?.image_url}
+                                productName={productName}
+                              />
 
-                  <span className="break-words">{productName}</span>
-                </div>
-              </td>
+                              <span className="break-words">
+                                {productName}
+                              </span>
+                            </div>
+                          </td>
 
-              <td className="whitespace-nowrap px-4 py-4 align-middle text-mauve-600">
-                {item.quantity}
-              </td>
+                          <td className="whitespace-nowrap px-4 py-4 align-middle text-mauve-600">
+                            {item.quantity}
+                          </td>
 
-              <td className="whitespace-nowrap px-4 py-4 align-middle text-teal-900">
-                {formatPrice(item.unit_price)}
-              </td>
+                          <td className="whitespace-nowrap px-4 py-4 align-middle text-teal-900">
+                            {formatPrice(item.unit_price)}
+                          </td>
 
-              <td className="whitespace-nowrap px-4 py-4 align-middle font-medium text-mauve-600">
-                {index === 0 ? formatPrice(sale.total_amount) : "—"}
-              </td>
+                          <td className="whitespace-nowrap px-4 py-4 align-middle font-medium text-mauve-600">
+                            {index === 0
+                              ? formatPrice(sale.total_amount)
+                              : "—"}
+                          </td>
 
-              <td className="whitespace-nowrap px-4 py-4 align-middle text-teal-900">
-                {sale.user?.full_name ?? "Unknown User"}
-              </td>
+                          <td className="whitespace-nowrap px-4 py-4 align-middle text-teal-900">
+                            {sale.user?.full_name ?? "Unknown User"}
+                          </td>
 
-              <td className="whitespace-nowrap px-4 py-4 align-middle text-mauve-600">
-                {formatDate(sale.created_at)}
-              </td>
-            </tr>
-          );
-        })
-      ),
-    )}
-  </tbody>
-</table>
-
+                          <td className="whitespace-nowrap px-4 py-4 align-middle text-mauve-600">
+                            {formatDate(sale.created_at)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ),
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Footer */}

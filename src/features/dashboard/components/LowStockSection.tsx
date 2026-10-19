@@ -31,10 +31,6 @@ function LowStockSection({
           <h2 className="text-xl font-bold text-mauve-600">
             Low Stock
           </h2>
-
-          <p className="mt-1 text-sm text-mauve-600">
-            Products that need attention.
-          </p>
         </div>
 
         {products.length > 0 && (
@@ -76,7 +72,7 @@ function LowStockSection({
       ) : (
         <>
           {/* Mobile-friendly product cards */}
-          <div className="divide-y divide-olive-100 md:hidden">
+          <div className="divide-y divide-olive-200 md:hidden">
             {products.map((product) => (
               <article
                 key={product.id}
@@ -162,7 +158,7 @@ function LowStockSection({
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-olive-100">
+              <tbody className="divide-y divide-olive-200">
                 {products.map((product) => (
                   <tr
                     key={product.id}

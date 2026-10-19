@@ -181,12 +181,13 @@ function SalesPage() {
         />
       </div>
 
-      {/* Sales history with filters below its heading */}
+      {/* Sales history */}
       <div className="mt-12 min-w-0">
         <SalesHistory
           sales={paginatedSales}
           title="Sales History"
           description="View previous sales, who processed them, and their dates."
+          showFilters
           employeeSearch={employeeSearch}
           selectedDate={selectedDate}
           onEmployeeSearchChange={handleEmployeeSearchChange}

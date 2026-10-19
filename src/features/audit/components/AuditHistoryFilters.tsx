@@ -40,10 +40,9 @@ export default function AuditHistoryFilters({
   }, [userSearch, handleUserChange]);
 
   const controlClassName =
-    "mt-1 min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200  px-3 py-2 text-sm text-mauve-500 placeholder:text-mauve-400 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200";
-
+    "mt-1 min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100  px-3 py-2 text-sm text-mauve-500 placeholder:text-mauve-400 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200";
   return (
-    <section className="rounded-xl border border-olive-100 bg-olive-100 p-4 sm:p-5">
+    <section className="rounded-xl border border-olive-200 bg-olive-200 p-4 sm:p-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label

@@ -118,9 +118,9 @@ function ProductForm({
 
     if (!name) {
       nextErrors.name = "Product name is required.";
-    } else if (name.length < 3 || name.length > 15) {
+    } else if (name.length < 3 || name.length > 25) {
       nextErrors.name =
-        "Product name must be between 3 and 15 characters.";
+        "Product name must be between 3 and 25 characters.";
     }
 
     if (!categoryId) {
@@ -149,7 +149,7 @@ function ProductForm({
           "Initial stock quantity is required.";
       } else if (
         !Number.isSafeInteger(stockQuantity) ||
-        stockQuantity < 10 ||
+        stockQuantity < 5 ||
         stockQuantity > 40
       ) {
         nextErrors.stock_quantity =
@@ -162,18 +162,18 @@ function ProductForm({
     } else if (
       !Number.isSafeInteger(minimumStock) ||
       minimumStock < 2 ||
-      minimumStock > 10
+      minimumStock > 20
     ) {
       nextErrors.minimum_stock =
-        "Minimum stock must be a whole number between 2 and 10.";
+        "Minimum stock must be a whole number between 2 and 20.";
     }
 
-  if (description.length > 0 && description.length < 20) {
+  if (description.length > 0 && description.length < 15) {
   nextErrors.description =
-    "Description must be at least 20 characters.";
-} else if (description.length > 40) {
+    "Description must be at least 15 characters.";
+} else if (description.length > 100) {
   nextErrors.description =
-    "Description must be 40 characters or less.";
+    "Description must be 100 characters or less.";
 }
 
     if (imageUrl) {
@@ -378,7 +378,7 @@ function ProductForm({
             id="stock_quantity"
             name="stock_quantity"
             type="number"
-            min="10"
+            min="5"
             max="40"
             step="1"
             inputMode="numeric"
@@ -423,7 +423,7 @@ function ProductForm({
             name="minimum_stock"
             type="number"
             min="2"
-            max="10"
+            max="20"
             step="1"
             inputMode="numeric"
             value={formValues.minimum_stock}
@@ -453,7 +453,7 @@ function ProductForm({
               </span>
             </label>
             <span className="shrink-0 text-xs text-teal-900">
-              {formValues.description.length}/40
+              {formValues.description.length}/100
             </span>
           </div>
           <textarea
@@ -461,7 +461,7 @@ function ProductForm({
             name="description"
             rows={4}
             minLength={20}
-            maxLength={40}
+            maxLength={100}
             value={formValues.description}
             onChange={handleChange}
             disabled={isSubmitting}

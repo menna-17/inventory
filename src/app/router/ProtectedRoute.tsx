@@ -14,17 +14,17 @@ function ProtectedRoute() {
   if (isLoading) {
     return (
       <main
-        className="flex min-h-screen items-center justify-center bg-slate-50 px-4"
+        className="flex min-h-screen items-center justify-center bg-olive-50 px-4"
         aria-busy="true"
         aria-live="polite"
       >
         <div className="text-center">
           <div
             aria-hidden="true"
-            className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800"
+            className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-mauve-600 border-t-mauve-600"
           />
 
-          <p className="mt-4 text-sm font-medium text-slate-600">
+          <p className="mt-4 text-sm font-medium text-mauve-600">
             Loading your account...
           </p>
         </div>

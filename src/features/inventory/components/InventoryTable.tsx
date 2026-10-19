@@ -60,7 +60,7 @@ function ProductThumbnail({
       alt={productName}
       loading="lazy"
       onError={() => setImageFailed(true)}
-      className="h-10 w-10 shrink-0 rounded-lg border border-olive-200 bg-olive-100"
+      className="h-10 w-10 shrink-0 rounded-lg border border-olive-100 bg-olive-100"
     />
   );
 }
@@ -74,27 +74,25 @@ function InventoryTable({
   const canAdjustStock =
     role === "owner" || role === "manager";
 
+  const handleAdjustStock = (item: InventoryItem) => {
+    onAdjustStock(item);
 
-const handleAdjustStock = (item: InventoryItem) => {
-  onAdjustStock(item);
+    window.requestAnimationFrame(() => {
+      const adjustForm = document.getElementById("adjust-stock-form");
 
-  window.requestAnimationFrame(() => {
-    const adjustForm = document.getElementById("adjust-stock-form");
+      if (!adjustForm) return;
 
-    if (!adjustForm) return;
+      const top =
+        adjustForm.getBoundingClientRect().top +
+        window.scrollY -
+        100;
 
-    const top =
-      adjustForm.getBoundingClientRect().top +
-      window.scrollY -
-      100;
-
-    window.scrollTo({
-      top: Math.max(0, top),
-      behavior: "smooth",
+      window.scrollTo({
+        top: Math.max(0, top),
+        behavior: "smooth",
+      });
     });
-  });
-};
-
+  };
 
   if (items.length === 0) {
     return (
@@ -112,7 +110,7 @@ const handleAdjustStock = (item: InventoryItem) => {
   return (
     <div className="overflow-hidden rounded-xl border border-olive-100 bg-olive-100">
       {/* Mobile cards */}
-      <div className="divide-y divide-olive-100 md:hidden">
+      <div className="divide-y divide-olive-200 md:hidden">
         {items.map((item) => {
           const status = getStockStatus(
             item.stock_quantity,
@@ -179,27 +177,27 @@ const handleAdjustStock = (item: InventoryItem) => {
 
       {/* Desktop table */}
       <div className="hidden overflow-x-auto md:block">
-        <table className="min-w-full divide-y divide-olive-200">
+        <table className="w-full divide-y divide-olive-200">
           <thead className="bg-olive-200">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
                 Product
               </th>
 
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                 Stock
               </th>
 
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                 Minimum Stock
               </th>
 
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-teal-900">
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                 Status
               </th>
 
               {canAdjustStock && (
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-teal-900">
+                <th className="w-1 whitespace-nowrap px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-teal-900">
                   Action
                 </th>
               )}
@@ -231,15 +229,15 @@ const handleAdjustStock = (item: InventoryItem) => {
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 text-sm text-mauve-600">
+                  <td className="px-6 py-4 text-center text-sm text-mauve-600">
                     {item.stock_quantity}
                   </td>
 
-                  <td className="px-6 py-4 text-sm text-teal-900">
+                  <td className="px-6 py-4 text-center text-sm text-teal-900">
                     {item.minimum_stock}
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-center">
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
                     >
@@ -248,7 +246,7 @@ const handleAdjustStock = (item: InventoryItem) => {
                   </td>
 
                   {canAdjustStock && (
-                    <td className="px-6 py-4 text-right">
+                    <td className="whitespace-nowrap px-6 py-4 text-center">
                       <button
                         type="button"
                         onClick={() => handleAdjustStock(item)}

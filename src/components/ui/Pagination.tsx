@@ -19,14 +19,18 @@ function Pagination({
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, totalCount);
 
-  // Show at most 3 page numbers around the current page.
-  const firstPage = Math.max(1, Math.min(page - 1, totalPages - 2));
-  const lastPage = Math.min(totalPages, firstPage + 2);
+  // Show the first page and up to two nearby pages.
+  let pages: number[];
 
-  const pages = Array.from(
-    { length: lastPage - firstPage + 1 },
-    (_, index) => firstPage + index,
-  );
+  if (totalPages <= 3) {
+    pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  } else if (page <= 2) {
+    pages = [1, 2, 3];
+  } else if (page >= totalPages) {
+    pages = [page - 1, page];
+  } else {
+    pages = [page, page + 1];
+  }
 
   return (
     <nav
@@ -46,6 +50,20 @@ function Pagination({
         >
           Previous
         </button>
+
+        {pages[0] > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => onPageChange(1)}
+              className="min-h-10 min-w-10 rounded-lg border border-olive-200 text-mauve-600 bg-olive-200 hover:bg-olive-300 px-3 text-sm"
+            >
+              1
+            </button>
+
+            <span className="px-2 text-sm text-mauve-600">...</span>
+          </>
+        )}
 
         {pages.map((pageNumber) => (
           <button
