@@ -170,12 +170,9 @@ function ProductsPage() {
 
       {/* Product form */}
       {isFormOpen && (
-        <div className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm sm:p-6">
+        <div className="min-w-0 rounded-xl border border-olive-200 bg-olive-200 p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-mauve-600 sm:text-xl">
-                {selectedProduct ? "Edit Product" : "Add Product"}
-              </h2>
 
             </div>
 

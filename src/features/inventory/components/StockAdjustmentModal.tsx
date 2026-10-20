@@ -176,13 +176,13 @@ function StockAdjustmentModal({
         ? "stock-adjustment-error"
         : "stock-quantity-help"
     }
-    className="mt-1 block min-h-11 w-full max-w-xs rounded-lg border bg-olive-100 border-mauve-600 px-3 py-2 text-base text-mauve-600 placeholder:text-mauve-400 outline-none transition disabled:cursor-not-allowed focus:border-mauve-600 focus:ring-mauve-200 disabled:bg-mauve-200"
+    className="mt-1 block min-h-11 w-full max-w-xs rounded-lg border bg-olive-100 border-mauve-600 px-3 py-2 text-base text-mauve-600 placeholder:text-mauve-300 outline-none transition disabled:cursor-not-allowed focus:border-mauve-600 focus:ring-mauve-200 disabled:bg-mauve-200"
     placeholder="Enter quantity"
   />
 
   <p
     id="stock-quantity-help"
-    className="mt-1 text-xs text-teal-900"
+    className="mt-1 text-xs text-mauve-400"
   >
     Enter a positive whole number.
   </p>
@@ -196,7 +196,7 @@ function StockAdjustmentModal({
         aria-atomic="true"
       >
         <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="text-teal-900">
+          <span className="text-mauve-600 font-semibold">
             Current stock
           </span>
 

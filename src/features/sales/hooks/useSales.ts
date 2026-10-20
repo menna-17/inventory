@@ -121,7 +121,7 @@ export function useSales() {
   }, [loadSales]);
 
   /*
-   * Create a sale.
+   * Create a sale containing multiple products.
    */
   const submitSale = useCallback(
     async (
@@ -129,37 +129,57 @@ export function useSales() {
     ): Promise<boolean> => {
       setError(null);
 
-      if (!input.productId) {
-        setError("Please select a product.");
+      if (!input.items || input.items.length === 0) {
+        setError("Please add at least one product.");
         return false;
       }
 
-      if (
-        !Number.isInteger(input.quantity) ||
-        input.quantity <= 0
-      ) {
-        setError(
-          "Please enter a valid positive whole number.",
+      const productIds = new Set<string>();
+
+      for (const item of input.items) {
+        if (!item.productId) {
+          setError("Please select a product for every item.");
+          return false;
+        }
+
+        if (
+          !Number.isInteger(item.quantity) ||
+          item.quantity <= 0
+        ) {
+          setError(
+            "Every product must have a valid positive whole-number quantity.",
+          );
+          return false;
+        }
+
+        if (productIds.has(item.productId)) {
+          setError(
+            "The same product cannot appear more than once in a sale.",
+          );
+          return false;
+        }
+
+        productIds.add(item.productId);
+
+        const selectedProduct = products.find(
+          (product) => product.id === item.productId,
         );
-        return false;
-      }
 
-      const selectedProduct = products.find(
-        (product) => product.id === input.productId,
-      );
+        if (!selectedProduct) {
+          setError(
+            "One of the selected products could not be found. Please refresh and try again.",
+          );
+          return false;
+        }
 
-      if (!selectedProduct) {
-        setError("Selected product was not found.");
-        return false;
-      }
-
-      if (
-        input.quantity > selectedProduct.stock_quantity
-      ) {
-        setError(
-          `Not enough stock. Available stock: ${selectedProduct.stock_quantity}.`,
-        );
-        return false;
+        if (
+          item.quantity > selectedProduct.stock_quantity
+        ) {
+          setError(
+            `Not enough stock for ${selectedProduct.name}. Available stock: ${selectedProduct.stock_quantity}.`,
+          );
+          return false;
+        }
       }
 
       setSaving(true);

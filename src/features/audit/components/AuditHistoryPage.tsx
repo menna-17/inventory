@@ -67,18 +67,18 @@ function formatAmount(value: unknown): string {
 
 function getActionStyle(action: string): string {
   if (action === "sale_created") {
-    return "bg-yellow-400 text-olive-50 ring-yellow-600/20";
+    return "bg-yellow-300 text-olive-50 ring-yellow-300";
   }
 
   if (action === "stock_added") {
-    return "bg-teal-900 text-olive-50 ring-teal-600/20";
+    return "bg-teal-900 text-olive-50 ring-teal-900";
   }
 
   if (action === "stock_removed") {
-    return "bg-red-700 text-olive-50 ring-red-600/20";
+    return "bg-red-700 text-olive-50 ring-red-700";
   }
 
-  return "bg-mauve-600 text-olive-50 ring-mauve-500/20";
+  return "bg-mauve-600 text-olive-50 ring-mauve-600";
 }
 
 function AuditHistoryPage() {

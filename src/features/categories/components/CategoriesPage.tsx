@@ -331,23 +331,13 @@ function CategoriesPage() {
 
       {/* Add/edit form */}
       {isFormOpen && (
-        <div className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm sm:p-6">
+        <div className="min-w-0 rounded-xl border border-olive-200 bg-olive-200 p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="inline-block rounded-lg bg-teal-900 px-12 py-2">
-                <h2 className="text-lg font-semibold text-olive-50 sm:text-xl">
-                  {selectedCategory ? "Edit Category" : "Add Category"}
-                </h2>
-              </div>
+          
             </div>
 
-            <button
-              type="button"
-              onClick={handleCloseForm}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-mauve-600 bg-mauve-600 px-3 py-2 text-sm font-medium text-olive-50 transition hover:bg-mauve-700 focus:outline-none"
-            >
-              Cancel
-            </button>
+        
           </div>
 
           <CategoryForm
@@ -373,7 +363,7 @@ function CategoriesPage() {
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search category name..."
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-sm text-mauve-600 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-sm text-mauve-600 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           />
         </div>
       )}

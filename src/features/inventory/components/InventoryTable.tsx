@@ -23,13 +23,13 @@ function getStockStatus(
   if (stockQuantity <= minimumStock) {
     return {
       label: "Low Stock",
-      className: "bg-yellow-100 text-yellow-800",
+      className: "bg-amber-300 text-amber-100",
     };
   }
 
   return {
     label: "In Stock",
-    className: "bg-green-100 text-green-700",
+    className: "bg-green-100 text-teal-900",
   };
 }
 

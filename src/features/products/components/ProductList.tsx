@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import type { Product } from "../types/product";
 
@@ -43,14 +44,14 @@ function getStockStatus(product: Product): {
     return {
       key: "low_stock",
       label: "Low Stock",
-      className: "bg-amber-100 text-amber-800",
+      className: "bg-amber-300 text-amber-100",
     };
   }
 
   return {
     key: "in_stock",
     label: "In Stock",
-    className: "bg-emerald-100 text-emerald-800",
+    className: "bg-emerald-100 text-teal-900",
   };
 }
 
@@ -109,10 +110,47 @@ function ProductList({
 }: ProductListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchTerm = searchParams.get("search") ?? "";
+  const categoryFilter = searchParams.get("category") ?? "all";
+
+  const validStatuses: FilterStatus[] = [
+    "all",
+    "in_stock",
+    "low_stock",
+    "out_of_stock",
+  ];
+
+  const requestedStatus = searchParams.get("status");
+
+  const statusFilter: FilterStatus = validStatuses.includes(
+    requestedStatus as FilterStatus,
+  )
+    ? (requestedStatus as FilterStatus)
+    : "all";
+
+  const page = Math.max(
+    1,
+    Number.parseInt(searchParams.get("page") ?? "1", 10) || 1,
+  );
+
+  function updateQuery(
+    updates: Record<string, string | null>,
+    replace = false,
+  ) {
+    const nextParams = new URLSearchParams(searchParams);
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null || value === "") {
+        nextParams.delete(key);
+      } else {
+        nextParams.set(key, value);
+      }
+    }
+
+    setSearchParams(nextParams, { replace });
+  }
 
   const productListRef = useRef<HTMLDivElement>(null);
 
@@ -140,6 +178,14 @@ function ProductList({
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   const currentPage = Math.min(page, Math.max(totalPages, 1));
 
+  useEffect(() => {
+    if (page !== currentPage) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("page", String(currentPage));
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [page, currentPage, searchParams, setSearchParams]);
+
   const paginatedProducts = useMemo(
     () =>
       filteredProducts.slice(
@@ -150,7 +196,7 @@ function ProductList({
   );
 
   function handlePageChange(nextPage: number) {
-    setPage(nextPage);
+    updateQuery({ page: String(nextPage) });
 
     requestAnimationFrame(() => {
       productListRef.current?.scrollIntoView({
@@ -210,25 +256,36 @@ function ProductList({
   }
 
   function clearFilters() {
-    setSearchTerm("");
-    setStatusFilter("all");
-    setCategoryFilter("all");
-    setPage(1);
+    updateQuery({
+      search: null,
+      status: null,
+      category: null,
+      page: null,
+    });
   }
 
   function handleSearchChange(value: string) {
-    setSearchTerm(value);
-    setPage(1);
+    updateQuery(
+      {
+        search: value || null,
+        page: null,
+      },
+      true,
+    );
   }
 
   function handleStatusChange(value: FilterStatus) {
-    setStatusFilter(value);
-    setPage(1);
+    updateQuery({
+      status: value === "all" ? null : value,
+      page: null,
+    });
   }
 
   function handleCategoryChange(value: string) {
-    setCategoryFilter(value);
-    setPage(1);
+    updateQuery({
+      category: value === "all" ? null : value,
+      page: null,
+    });
   }
 
   if (products.length === 0) {
@@ -313,6 +370,7 @@ function ProductList({
               return (
                 <article
                   key={product.id}
+                  data-product-id={product.id}
                   className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm"
                 >
                   <div className="flex items-start gap-3">
@@ -397,7 +455,7 @@ function ProductList({
           <div className="hidden w-full min-w-0 rounded-xl border border-olive-100 bg-olive-100 md:block">
             <div className="w-full overflow-x-auto rounded-xl">
               <table className="w-full min-w-[1000px] table-fixed divide-y divide-olive-200">
-                <thead className="bg-olive-200">
+                <thead id="products-table-header" className="bg-olive-200">
                   <tr>
                     <th
                       scope="col"
@@ -458,6 +516,7 @@ function ProductList({
                     return (
                       <tr
                         key={product.id}
+                        data-product-id={product.id}
                         className="transition hover:bg-olive-50"
                       >
                         <td className="px-5 py-4 text-center">

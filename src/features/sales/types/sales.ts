@@ -24,7 +24,11 @@ export type Sale = {
   items: SaleItem[];
 };
 
-export type CreateSaleInput = {
+export type CreateSaleItemInput = {
   productId: string;
   quantity: number;
+};
+
+export type CreateSaleInput = {
+  items: CreateSaleItemInput[];
 };

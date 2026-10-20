@@ -29,7 +29,7 @@ export default function ProductFilters<T extends FilterableItem>({
   onSearchChange,
   onStatusChange,
   onCategoryChange,
-  filteredCount,
+
   onClearFilters,
 }: ProductFiltersProps<T>) {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
@@ -81,7 +81,7 @@ export default function ProductFilters<T extends FilterableItem>({
       value: "low_stock",
       label: "Low Stock",
       count: counts.low_stock,
-      activeClass: "bg-yellow-400 text-olive-50",
+      activeClass: "bg-amber-300 text-olive-50",
     },
     {
       value: "out_of_stock",
@@ -104,7 +104,7 @@ export default function ProductFilters<T extends FilterableItem>({
 
   return (
     <div className="w-full space-y-5">
-      <div className="grid w-full grid-cols-1 gap-4 rounded-xl border border-olive-100 bg-olive-100 p-4 sm:grid-cols-2 sm:p-5">
+      <div className="grid w-full grid-cols-1 gap-4 rounded-xl border border-olive-200 bg-olive-200 p-4 sm:grid-cols-2 sm:p-5">
         <div className="min-w-0">
           <label
             htmlFor="product-search"
@@ -119,7 +119,7 @@ export default function ProductFilters<T extends FilterableItem>({
             value={localSearchTerm}
             onChange={(event) => setLocalSearchTerm(event.target.value)}
             placeholder="Name or description..."
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2.5 text-sm outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 placeholder:text-mauve-400"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-sm outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 placeholder:text-mauve-300"
           />
         </div>
 
@@ -135,7 +135,7 @@ export default function ProductFilters<T extends FilterableItem>({
             id="category-filter"
             value={categoryFilter}
             onChange={(event) => onCategoryChange(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2.5 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           >
             <option value="all">All Categories</option>
 
@@ -177,19 +177,7 @@ export default function ProductFilters<T extends FilterableItem>({
       </div>
 
       <div className="flex w-full flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-mauve-600" aria-live="polite">
-          Showing{" "}
-           <span className="font-semibold text-mauve-600">
-            {filteredCount}
-          </span>{" "}
-         
-          of{" "}
-           <span className="font-semibold text-mauve-600">
-            {products.length}
-          </span>{" "}
-         
-          products
-        </p>
+       
 
         {hasActiveFilters && (
           <button

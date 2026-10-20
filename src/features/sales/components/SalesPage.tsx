@@ -1,10 +1,13 @@
 
-import { useState } from "react";
+import { useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import SaleForm from "./SaleForm";
 import SalesHistory from "./SalesHistory";
 
 import { useSales } from "../hooks/useSales";
+import type { CreateSaleItemInput } from "../types/sales";
+
 import Pagination from "../../../components/ui/Pagination";
 
 const PAGE_SIZE = 10;
@@ -20,9 +23,34 @@ function SalesPage() {
     refresh,
   } = useSales();
 
-  const [page, setPage] = useState(1);
-  const [employeeSearch, setEmployeeSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const salesHistoryRef = useRef<HTMLDivElement>(null);
+
+  const parsedPage = Number(searchParams.get("page"));
+  const page =
+    Number.isSafeInteger(parsedPage) && parsedPage > 0
+      ? parsedPage
+      : 1;
+
+  const employeeSearch = searchParams.get("employee") ?? "";
+  const selectedDate = searchParams.get("date") ?? "";
+
+  function updateUrlState(
+    updates: Record<string, string>,
+    replace = true,
+  ) {
+    const nextParams = new URLSearchParams(searchParams);
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        nextParams.set(key, value);
+      } else {
+        nextParams.delete(key);
+      }
+    });
+
+    setSearchParams(nextParams, { replace });
+  }
 
   // Filter sales by employee name.
   const normalizedEmployeeSearch = employeeSearch.trim().toLowerCase();
@@ -62,12 +90,10 @@ function SalesPage() {
   );
 
   async function handleCreateSale(
-    productId: string,
-    quantity: number,
+    items: CreateSaleItemInput[],
   ) {
     return submitSale({
-      productId,
-      quantity,
+      items,
     });
   }
 
@@ -76,23 +102,39 @@ function SalesPage() {
       return;
     }
 
-    setPage(nextPage);
+    updateUrlState(
+      { page: String(nextPage) },
+      false,
+    );
+
+    requestAnimationFrame(() => {
+      salesHistoryRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
   }
 
   function handleEmployeeSearchChange(value: string) {
-    setEmployeeSearch(value);
-    setPage(1);
+    updateUrlState({
+      employee: value,
+      page: "",
+    });
   }
 
   function handleDateChange(value: string) {
-    setSelectedDate(value);
-    setPage(1);
+    updateUrlState({
+      date: value,
+      page: "",
+    });
   }
 
   function clearFilters() {
-    setEmployeeSearch("");
-    setSelectedDate("");
-    setPage(1);
+    updateUrlState({
+      employee: "",
+      date: "",
+      page: "",
+    });
   }
 
   const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -173,7 +215,7 @@ function SalesPage() {
       )}
 
       {/* Create sale */}
-      <div className="relative isolate my-2 min-w-0 overflow-visible rounded-xl border border-olive-100 bg-olive-100 shadow-sm">
+      <div className="relative isolate my-2 min-w-0 rounded-2xl border border-olive-100 bg-olive-200 p-5 shadow-sm sm:p-6">
         <SaleForm
           products={products}
           saving={saving}
@@ -182,7 +224,10 @@ function SalesPage() {
       </div>
 
       {/* Sales history */}
-      <div className="mt-12 min-w-0">
+      <div
+        ref={salesHistoryRef}
+        className="mt-12 min-w-0 scroll-mt-20"
+      >
         <SalesHistory
           sales={paginatedSales}
           title="Sales History"

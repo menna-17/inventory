@@ -21,7 +21,7 @@ function SalesFilters({
   );
 
   return (
-    <div className="rounded-xl border border-olive-100 bg-olive-100 p-4 shadow-sm sm:p-5">
+    <div className="rounded-xl border border-olive-200 bg-olive-200 p-4 shadow-sm sm:p-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Search by employee name */}
         <div className="min-w-0">
@@ -53,7 +53,7 @@ function SalesFilters({
                 onEmployeeSearchChange?.(event.target.value)
               }
               placeholder="Enter employee name..."
-              className="min-h-11 w-full rounded-lg border border-mauve-500 bg-olive-200 py-2 pl-10 pr-3 text-sm text-mauve-800 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+              className="min-h-11 w-full rounded-lg border border-mauve-500 bg-olive-100 py-2 pl-10 pr-3 text-sm text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
             />
           </div>
         </div>
@@ -79,7 +79,7 @@ function SalesFilters({
                 input.showPicker();
               }
             }}
-            className="min-h-11 w-full cursor-pointer rounded-lg border border-mauve-600 bg-olive-200 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="min-h-11 w-full cursor-pointer rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           />
         </div>
       </div>

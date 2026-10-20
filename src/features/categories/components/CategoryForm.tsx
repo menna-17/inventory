@@ -156,15 +156,15 @@ function CategoryForm({
           required
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "category-name-error" : undefined}
-          className={`mt-2 block min-h-11 w-full rounded-lg border bg-olive-200 px-3 py-2.5 text-base text-mauve-600 outline-none transition placeholder:text-mauve-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-olive-50 disabled:text-mauve-300 sm:text-sm ${
-            error
-              ? "border-red-400 focus:border-red-500 focus:ring-red-100"
-              : "border-olive-200 focus:border-mauve-600 focus:ring-mauve-200"
-          }`}
+         className={`mt-2 block min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-base text-mauve-600 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-olive-100 disabled:text-mauve-300 sm:text-sm ${
+  error
+    ? "border-red-400 focus:border-red-500 focus:ring-red-100"
+    : ""
+}`}
         />
 
         <div className="mt-1.5 flex justify-between gap-3">
-          <p className="text-xs text-teal-900">
+          <p className="text-xs text-mauve-400">
             Use a clear name that helps organize your products.
           </p>
 
@@ -189,7 +189,7 @@ function CategoryForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-olive-200 bg-olive-200 px-4 py-2.5 text-sm font-semibold text-mauve-600 transition hover:bg-olive-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-olive-100 bg-olive-100 px-4 py-2.5 text-sm font-semibold text-mauve-600 transition hover:bg-olive-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           Cancel
         </button>

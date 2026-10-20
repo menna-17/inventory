@@ -168,13 +168,13 @@ function ProductForm({
         "Minimum stock must be a whole number between 2 and 20.";
     }
 
-  if (description.length > 0 && description.length < 15) {
-  nextErrors.description =
-    "Description must be at least 15 characters.";
-} else if (description.length > 100) {
-  nextErrors.description =
-    "Description must be 100 characters or less.";
-}
+    if (description.length > 0 && description.length < 15) {
+      nextErrors.description =
+        "Description must be at least 15 characters.";
+    } else if (description.length > 100) {
+      nextErrors.description =
+        "Description must be 100 characters or less.";
+    }
 
     if (imageUrl) {
       try {
@@ -237,6 +237,23 @@ function ProductForm({
       }
 
       await onSuccess();
+
+      if (isEditMode && product) {
+        requestAnimationFrame(() => {
+          const productElements = document.querySelectorAll(
+            `[data-product-id="${CSS.escape(product.id)}"]`,
+          );
+
+          const visibleProduct = Array.from(productElements).find(
+            (element) => element.getClientRects().length > 0,
+          );
+
+          visibleProduct?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        });
+      }
     } catch (error) {
       console.error(
         isEditMode ? "updateProduct error:" : "createProduct error:",
@@ -258,7 +275,7 @@ function ProductForm({
   }
 
   const inputClassName =
-    "mt-1.5 block min-h-11 w-full rounded-lg border border-olive-200 bg-olive-200 px-3 py-2.5 text-base text-mauve-500 outline-none transition placeholder:text-mauve-400 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-mauve-500 disabled:text-mauve-600 sm:text-sm";
+    "mt-1.5 block min-h-11 w-full rounded-lg border border-olive-100 bg-olive-100 px-3 py-2.5 text-base text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-olive-50 disabled:text-mauve-200 sm:text-sm";
 
   const labelClassName =
     "block text-sm font-medium text-mauve-600";
@@ -530,7 +547,7 @@ function ProductForm({
           {isSubmitting ? (
             <>
               <span
-                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-mauve/40 border-t-mauve-600"
                 aria-hidden="true"
               />
               {isEditMode ? "Updating..." : "Saving..."}

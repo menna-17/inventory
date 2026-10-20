@@ -69,7 +69,7 @@ function ProductThumbnail({
       alt={productName}
       loading="lazy"
       onError={() => setImageFailed(true)}
-      className="h-10 w-10 shrink-0 rounded-lg border border-olive-200 bg-olive-100 "
+      className="h-10 w-10 shrink-0 rounded-lg border border-olive-100 bg-olive-100 "
     />
   );
 }
@@ -77,9 +77,7 @@ function ProductThumbnail({
 function SalesHistory({
   sales,
   title = "Sales History",
-  description = "View previous sales, who processed them, and their dates.",
   titleClassName = "text-xl font-bold text-mauve-600",
-  descriptionClassName = "mt-1 text-sm text-mauve-600",
   showFilters = false,
   employeeSearch = "",
   selectedDate = "",
@@ -101,8 +99,6 @@ function SalesHistory({
             </span>
           )}
         </div>
-
-        <p className={descriptionClassName}>{description}</p>
       </div>
 
       {/* Sales filters - directly below the heading and description */}
@@ -143,21 +139,21 @@ function SalesHistory({
             No sales yet
           </h3>
 
-          <p className="mx-auto mt-1 max-w-sm text-sm text-teal-900">
+          <p className="mx-auto mt-1 max-w-sm text-sm text-mauve-600">
             Completed sales will appear here when a sale is processed.
           </p>
         </div>
       ) : (
         <div className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 shadow-sm">
           {/* Mobile cards */}
-          <div className="min-w-0 divide-y divide-olive-100 py-2 md:hidden">
+          <div className="flex min-w-0 flex-col divide-y divide-olive-200 py-2 md:hidden">
             {sales.map((sale) => (
               <article
                 key={sale.id}
-                className="min-w-0 space-y-4 px-4 py-5"
+                className="block w-full min-w-0 space-y-4 overflow-visible bg-olive-100 px-4 py-5"
               >
                 {/* Sale title and total */}
-                <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-col gap-2 min-[360px]:flex-row min-[360px]:items-start min-[360px]:justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium uppercase tracking-wide text-teal-900">
                       Sale
@@ -170,13 +166,13 @@ function SalesHistory({
                     </p>
                   </div>
 
-                  <p className="shrink-0 text-base font-bold text-mauve-600">
+                  <p className="break-words text-base font-bold text-mauve-600 min-[360px]:shrink-0">
                     {formatPrice(sale.total_amount)}
                   </p>
                 </div>
 
                 {/* Sale items */}
-                <div className="min-w-0 space-y-3">
+                <div className="flex min-w-0 flex-col gap-3">
                   {sale.items.length === 0 ? (
                     <p className="text-sm text-teal-900">
                       This sale has no items.
@@ -189,7 +185,7 @@ function SalesHistory({
                       return (
                         <div
                           key={`${sale.id}-${item.product?.name ?? "item"}-${index}`}
-                          className="flex min-w-0 items-center gap-3 rounded-lg bg-olive-200 p-3"
+                          className="flex w-full min-w-0 items-start gap-3 rounded-lg bg-olive-200 p-3"
                         >
                           <ProductThumbnail
                             imageUrl={item.product?.image_url}
@@ -201,10 +197,10 @@ function SalesHistory({
                               {productName}
                             </p>
 
-                            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-teal-900">
+                            <div className="mt-1 flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs text-teal-900">
                               <span>Qty: {item.quantity}</span>
 
-                              <span>
+                              <span className="break-words">
                                 Unit price: {formatPrice(item.unit_price)}
                               </span>
                             </div>
@@ -216,7 +212,7 @@ function SalesHistory({
                 </div>
 
                 {/* Sale details */}
-                <dl className="grid min-w-0 grid-cols-1 gap-3 border-t border-olive-300 pt-3 text-sm min-[360px]:grid-cols-2">
+                <dl className="grid w-full min-w-0 grid-cols-1 gap-3 pt-3 text-sm min-[360px]:grid-cols-2">
                   <div className="min-w-0">
                     <dt className="text-xs text-teal-900">
                       Processed by
@@ -241,87 +237,110 @@ function SalesHistory({
 
           {/* Tablet and desktop table */}
           <div className="hidden max-w-full overflow-x-auto rounded-xl md:block">
-            <table className="min-w-full divide-y divide-olive-100 text-sm">
+            <table className="w-full table-auto divide-y divide-olive-100 text-sm">
               <thead className="bg-olive-200">
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
                     Product
                   </th>
-                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                  <th className="whitespace-nowrap px-4 py-3 text-center font-semibold text-teal-900">
                     Quantity
                   </th>
-                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                  <th className="whitespace-nowrap px-4 py-3 text-center font-semibold text-teal-900">
                     Unit Price
                   </th>
-                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                  <th className="whitespace-nowrap px-4 py-3 text-center font-semibold text-teal-900">
                     Sale Total
                   </th>
-                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                  <th className="whitespace-nowrap px-4 py-3 text-center font-semibold text-teal-900">
                     Processed By
                   </th>
-                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-teal-900">
+                  <th className="w-1 whitespace-nowrap px-4 py-3 text-center font-semibold text-teal-900">
                     Date
                   </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-olive-200">
-                {sales.map((sale) =>
-                  sale.items.length === 0 ? (
-                    <tr key={sale.id}>
-                      <td colSpan={6} className="px-4 py-4 text-teal-900">
-                        Sale has no items.
-                      </td>
-                    </tr>
-                  ) : (
-                    sale.items.map((item, index) => {
-                      const productName =
-                        item.product?.name ?? "Unknown Product";
+                {sales.map((sale) => (
+                  <tr
+                    key={sale.id}
+                    className="align-top transition hover:bg-olive-50"
+                  >
+                    {/* Products in this sale */}
+                    <td className="px-4 py-4 text-teal-900">
+                      {sale.items.length === 0 ? (
+                        <span>Sale has no items.</span>
+                      ) : (
+                        <div className="flex min-w-0 flex-col gap-3">
+                          {sale.items.map((item, index) => {
+                            const productName =
+                              item.product?.name ?? "Unknown Product";
 
-                      return (
-                        <tr
-                          key={`${sale.id}-${item.product?.name ?? "item"}-${index}`}
-                          className="align-middle transition hover:bg-olive-50"
-                        >
-                          <td className="max-w-xs break-words px-4 py-4 font-medium text-teal-900">
-                            <div className="flex items-center gap-3">
-                              <ProductThumbnail
-                                imageUrl={item.product?.image_url}
-                                productName={productName}
-                              />
+                            return (
+                              <div
+                                key={`${sale.id}-${item.product_id}-${index}`}
+                                className="flex min-w-0 items-center gap-3"
+                              >
+                                <ProductThumbnail
+                                  imageUrl={item.product?.image_url}
+                                  productName={productName}
+                                />
 
-                              <span className="break-words">
-                                {productName}
-                              </span>
-                            </div>
-                          </td>
+                                <span className="break-words font-medium">
+                                  {productName}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </td>
 
-                          <td className="whitespace-nowrap px-4 py-4 align-middle text-mauve-600">
+                    {/* Quantities */}
+                    <td className="px-4 py-4 text-center text-mauve-600">
+                      <div className="flex flex-col gap-3">
+                        {sale.items.map((item, index) => (
+                          <span
+                            key={`${sale.id}-quantity-${item.product_id}-${index}`}
+                            className="flex min-h-10 items-center justify-center"
+                          >
                             {item.quantity}
-                          </td>
+                          </span>
+                        ))}
+                      </div>
+                    </td>
 
-                          <td className="whitespace-nowrap px-4 py-4 align-middle text-teal-900">
+                    {/* Unit prices */}
+                    <td className="px-4 py-4 text-center text-teal-900">
+                      <div className="flex flex-col gap-3">
+                        {sale.items.map((item, index) => (
+                          <span
+                            key={`${sale.id}-price-${item.product_id}-${index}`}
+                            className="flex min-h-10 items-center justify-center whitespace-nowrap"
+                          >
                             {formatPrice(item.unit_price)}
-                          </td>
+                          </span>
+                        ))}
+                      </div>
+                    </td>
 
-                          <td className="whitespace-nowrap px-4 py-4 align-middle font-medium text-mauve-600">
-                            {index === 0
-                              ? formatPrice(sale.total_amount)
-                              : "—"}
-                          </td>
+                    {/* Sale total appears once */}
+                    <td className="whitespace-nowrap px-4 py-4 text-center align-middle font-semibold text-mauve-600">
+                      {formatPrice(sale.total_amount)}
+                    </td>
 
-                          <td className="whitespace-nowrap px-4 py-4 align-middle text-teal-900">
-                            {sale.user?.full_name ?? "Unknown User"}
-                          </td>
+                    {/* Employee appears once */}
+                    <td className="px-4 py-4 text-center align-middle text-teal-900">
+                      {sale.user?.full_name ?? "Unknown User"}
+                    </td>
 
-                          <td className="whitespace-nowrap px-4 py-4 align-middle text-mauve-600">
-                            {formatDate(sale.created_at)}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ),
-                )}
+                    {/* Date appears once */}
+                    <td className="whitespace-nowrap px-4 py-4 text-center align-middle text-mauve-600">
+                      {formatDate(sale.created_at)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

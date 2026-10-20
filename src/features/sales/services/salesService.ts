@@ -199,29 +199,47 @@ export async function createSale(
     );
   }
 
-  if (!input.productId) {
-    throw new Error("A product is required.");
+  if (!input.items || input.items.length === 0) {
+    throw new Error(
+      "Add at least one product to the sale.",
+    );
   }
 
-  if (
-    !Number.isInteger(input.quantity) ||
-    input.quantity <= 0
-  ) {
-    throw new Error(
-      "Quantity must be greater than zero.",
-    );
+  const productIds = new Set<string>();
+
+  for (const item of input.items) {
+    if (!item.productId) {
+      throw new Error(
+        "Every sale item must have a product.",
+      );
+    }
+
+    if (
+      !Number.isInteger(item.quantity) ||
+      item.quantity <= 0
+    ) {
+      throw new Error(
+        "Every product quantity must be a positive whole number.",
+      );
+    }
+
+    if (productIds.has(item.productId)) {
+      throw new Error(
+        "The same product cannot appear more than once in a sale.",
+      );
+    }
+
+    productIds.add(item.productId);
   }
 
   const {
     data,
     error,
   } = await supabase.rpc("create_sale", {
-    p_items: [
-      {
-        product_id: input.productId,
-        quantity: input.quantity,
-      },
-    ],
+    p_items: input.items.map((item) => ({
+      product_id: item.productId,
+      quantity: item.quantity,
+    })),
   });
 
   if (error) {
