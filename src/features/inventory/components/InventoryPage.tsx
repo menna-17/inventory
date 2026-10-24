@@ -148,13 +148,14 @@ function InventoryPage() {
    * This works even when the product is not on the current inventory page.
    */
   useEffect(() => {
-    if (!canAdjustStock || !productId) return;
+   if (!canAdjustStock || !productId) return;
 
-    let cancelled = false;
+const requestedProductId = productId;
+let cancelled = false;
 
-    async function loadRequestedProduct() {
-      try {
-        const item = await getInventoryItemById(productId);
+async function loadRequestedProduct() {
+  try {
+    const item = await getInventoryItemById(requestedProductId);
 
         if (cancelled) return;
 
@@ -175,17 +176,17 @@ function InventoryPage() {
 
             if (!adjustForm) return;
 
-         const formTop =
-  adjustForm.getBoundingClientRect().top + window.scrollY;
+            const formTop =
+              adjustForm.getBoundingClientRect().top + window.scrollY;
 
-const top =
-  formTop -
-  (window.innerHeight - adjustForm.offsetHeight) / 2;
+            const top =
+              formTop -
+              (window.innerHeight - adjustForm.offsetHeight) / 2;
 
-window.scrollTo({
-  top: Math.max(0, top),
-  behavior: "smooth",
-});
+            window.scrollTo({
+              top: Math.max(0, top),
+              behavior: "smooth",
+            });
           });
         });
       } catch (error) {
