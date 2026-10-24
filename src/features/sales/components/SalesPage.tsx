@@ -13,15 +13,16 @@ import Pagination from "../../../components/ui/Pagination";
 const PAGE_SIZE = 10;
 
 function SalesPage() {
-  const {
-    sales,
-    products,
-    loading,
-    saving,
-    error,
-    submitSale,
-    refresh,
-  } = useSales();
+const {
+  sales,
+  products,
+  categories,
+  loading,
+  saving,
+  error,
+  submitSale,
+  refresh,
+} = useSales();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const salesHistoryRef = useRef<HTMLDivElement>(null);
@@ -216,11 +217,12 @@ function SalesPage() {
 
       {/* Create sale */}
       <div className="relative isolate my-2 min-w-0 rounded-2xl border border-olive-100 bg-olive-200 p-5 shadow-sm sm:p-6">
-        <SaleForm
-          products={products}
-          saving={saving}
-          onCreateSale={handleCreateSale}
-        />
+<SaleForm
+  products={products}
+  categories={categories}
+  saving={saving}
+  onCreateSale={handleCreateSale}
+/>
       </div>
 
       {/* Sales history */}

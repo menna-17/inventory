@@ -3,8 +3,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   getInventoryItems,
+  getInventoryStatusCounts,
   updateStock,
   type InventoryFilters,
+  type InventoryStatusCounts,
 } from "../services/inventoryService";
 
 import type {
@@ -14,6 +16,7 @@ import type {
 
 type UseInventoryResult = {
   items: InventoryItem[];
+  statusCounts: InventoryStatusCounts;
   isLoading: boolean;
   isUpdatingStock: boolean;
   error: Error | null;
@@ -59,8 +62,17 @@ function areFiltersEqual(
   );
 }
 
+const emptyStatusCounts: InventoryStatusCounts = {
+  all: 0,
+  in_stock: 0,
+  low_stock: 0,
+  out_of_stock: 0,
+};
+
 export function useInventory(): UseInventoryResult {
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [statusCounts, setStatusCounts] =
+    useState<InventoryStatusCounts>(emptyStatusCounts);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -111,10 +123,13 @@ export function useInventory(): UseInventoryResult {
 
     async function fetchPage() {
       try {
-        const result = await getInventoryItems({
-          ...filters,
-          page,
-        });
+        const [result, counts] = await Promise.all([
+          getInventoryItems({
+            ...filters,
+            page,
+          }),
+          getInventoryStatusCounts(filters),
+        ]);
 
         if (cancelled || requestId !== requestIdRef.current) {
           return;
@@ -123,6 +138,7 @@ export function useInventory(): UseInventoryResult {
         setItems(result.items);
         setTotalCount(result.totalCount);
         setTotalPages(result.totalPages);
+        setStatusCounts(counts);
         setError(null);
 
         hasLoadedRef.current = true;
@@ -150,6 +166,7 @@ export function useInventory(): UseInventoryResult {
         setItems([]);
         setTotalCount(0);
         setTotalPages(0);
+        setStatusCounts(emptyStatusCounts);
 
         settleRefreshWaiters(normalized);
       } finally {
@@ -246,6 +263,7 @@ export function useInventory(): UseInventoryResult {
 
   return {
     items,
+    statusCounts,
     isLoading,
     isUpdatingStock,
     error,

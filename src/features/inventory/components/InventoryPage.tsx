@@ -1,9 +1,13 @@
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../../../app/providers/useAuth";
 import { useInventory } from "../hooks/useInventory";
-import { updateStock } from "../services/inventoryService";
+import {
+  getInventoryItemById,
+  updateStock,
+} from "../services/inventoryService";
 import {
   getStockMovements,
   type StockMovementPageResult,
@@ -37,6 +41,7 @@ function InventoryPage() {
   const {
     items,
     isLoading,
+    statusCounts,
     error,
     page,
     totalPages,
@@ -102,16 +107,116 @@ function InventoryPage() {
     ? items.find((item) => item.id === productId) ?? null
     : null;
 
-  // Staff must never get an adjustment modal from a URL parameter.
-  const activeItem = canAdjustStock
-    ? selectedItem ?? productFromUrl
-    : null;
+  // Only show the product selected by the current URL.
+  // Staff must never get an adjustment form from a URL parameter.
+  const activeItem =
+    canAdjustStock && productId
+      ? selectedItem?.id === productId
+        ? selectedItem
+        : productFromUrl
+      : null;
+
+  /*
+   * When arriving from Low Stock, clear filters that could hide the
+   * requested product and return to the first inventory page.
+   * State updates are deferred to avoid synchronous effect updates.
+   */
+  useEffect(() => {
+    if (!canAdjustStock || !productId) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setSearchTerm("");
+      setStatusFilter("all");
+      setCategoryFilter("all");
+
+      setFilters({
+        searchTerm: "",
+        statusFilter: "all",
+        categoryFilter: "all",
+      });
+
+      setPage(1);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [canAdjustStock, productId, setFilters, setPage]);
+
+  /*
+   * Load the exact product requested by the URL.
+   * This works even when the product is not on the current inventory page.
+   */
+  useEffect(() => {
+    if (!canAdjustStock || !productId) return;
+
+    let cancelled = false;
+
+    async function loadRequestedProduct() {
+      try {
+        const item = await getInventoryItemById(productId);
+
+        if (cancelled) return;
+
+        setSelectedItem(item);
+        setAdjustmentType("add");
+        setQuantity("");
+        setSaveError(null);
+        setNotice(null);
+
+        // Scroll after React has rendered the adjustment form.
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            if (cancelled) return;
+
+            const adjustForm = document.getElementById(
+              "adjust-stock-form",
+            );
+
+            if (!adjustForm) return;
+
+         const formTop =
+  adjustForm.getBoundingClientRect().top + window.scrollY;
+
+const top =
+  formTop -
+  (window.innerHeight - adjustForm.offsetHeight) / 2;
+
+window.scrollTo({
+  top: Math.max(0, top),
+  behavior: "smooth",
+});
+          });
+        });
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error("Failed to load requested product:", error);
+
+        setSaveError(
+          getErrorMessage(
+            error,
+            "Failed to load the requested product.",
+          ),
+        );
+      }
+    }
+
+    void loadRequestedProduct();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canAdjustStock, productId]);
 
   /*
    * Restore the saved inventory page and apply the saved filters on mount.
    * Apply the page after filters in case setFilters resets pagination.
    */
   useEffect(() => {
+    // A productId redirect takes priority over saved filters and page.
+    if (searchParams.get("productId")) return;
+
     const parsedPage = Number(searchParams.get("page"));
     const savedPage =
       Number.isSafeInteger(parsedPage) && parsedPage > 0
@@ -498,7 +603,7 @@ function InventoryPage() {
       {notice && (
         <div
           role="status"
-          className="rounded-lg border border-teal-900 bg-teal-600 p-4 text-sm text-olive-50"
+          className="rounded-lg border border-mauve-600 bg-mauve-600 p-4 text-sm text-olive-50"
         >
           {notice}
         </div>
@@ -553,7 +658,7 @@ function InventoryPage() {
         onSearchChange={setSearchTerm}
         onStatusChange={setStatusFilter}
         onCategoryChange={setCategoryFilter}
-        filteredCount={totalCount}
+        statusCounts={statusCounts}
         onClearFilters={clearFilters}
       />
 

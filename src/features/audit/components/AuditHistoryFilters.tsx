@@ -30,17 +30,24 @@ export default function AuditHistoryFilters({
   );
 
   useEffect(() => {
+    const trimmedUserSearch = userSearch.trim();
+
+    if (trimmedUserSearch === selectedUser) {
+      return;
+    }
+
     const timeoutId = window.setTimeout(() => {
-      handleUserChange(userSearch.trim());
+      handleUserChange(trimmedUserSearch);
     }, 300);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [userSearch, handleUserChange]);
+  }, [userSearch, selectedUser, handleUserChange]);
 
   const controlClassName =
     "mt-1 min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100  px-3 py-2 text-sm text-mauve-500 placeholder:text-mauve-300 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200";
+
   return (
     <section className="rounded-xl border border-olive-200 bg-olive-200 p-4 sm:p-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

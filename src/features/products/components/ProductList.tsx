@@ -44,7 +44,7 @@ function getStockStatus(product: Product): {
     return {
       key: "low_stock",
       label: "Low Stock",
-      className: "bg-amber-300 text-amber-100",
+      className: "bg-yellow-100 text-yellow-600",
     };
   }
 
@@ -339,7 +339,6 @@ function ProductList({
         onSearchChange={handleSearchChange}
         onStatusChange={handleStatusChange}
         onCategoryChange={handleCategoryChange}
-        filteredCount={filteredProducts.length}
         onClearFilters={clearFilters}
       />
 

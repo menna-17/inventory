@@ -15,6 +15,7 @@ type SaleItemInput = {
 
 type SaleFormProps = {
   products: Product[];
+  categories?: { id: string; name: string }[];
   saving: boolean;
   onCreateSale: (
     items: SaleItemInput[],
@@ -23,11 +24,14 @@ type SaleFormProps = {
 
 function SaleForm({
   products,
+  categories = [],
   saving,
   onCreateSale,
 }: SaleFormProps) {
   const [selectedProductId, setSelectedProductId] =
     useState("");
+  const [isProductDropdownOpen, setIsProductDropdownOpen] =
+    useState(false);
 
   const [quantity, setQuantity] = useState("");
   const [validationError, setValidationError] =
@@ -44,6 +48,14 @@ function SaleForm({
   const availableProducts = products.filter(
     (product) => product.stock_quantity > 0,
   );
+
+  function getCategoryName(categoryId: string) {
+    return (
+      categories.find(
+        (category) => category.id === categoryId,
+      )?.name ?? "Uncategorized"
+    );
+  }
 
   function handleAddItem() {
     setValidationError("");
@@ -111,6 +123,7 @@ function SaleForm({
     }
 
     setSelectedProductId("");
+    setIsProductDropdownOpen(false);
     setQuantity("");
     setValidationError("");
   }
@@ -188,6 +201,7 @@ function SaleForm({
 
       if (success) {
         setSelectedProductId("");
+        setIsProductDropdownOpen(false);
         setQuantity("");
         setItems([]);
         setValidationError("");
@@ -200,9 +214,9 @@ function SaleForm({
   }
 
   function handleProductKeyDown(
-    event: KeyboardEvent<HTMLSelectElement>,
+    event: KeyboardEvent<HTMLButtonElement>,
   ) {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
 
       if (selectedProductId) {
@@ -255,38 +269,105 @@ function SaleForm({
               Product
             </label>
 
-            <select
-              id="sale-product"
-              value={selectedProductId}
-              onChange={(event) => {
-                setSelectedProductId(event.target.value);
-                setValidationError("");
-              }}
-              onKeyDown={handleProductKeyDown}
-              disabled={
-                saving || availableProducts.length === 0
-              }
-              className="h-14 w-full rounded-xl border border-mauve-600 bg-olive-100 px-4 text-base text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-olive-100 disabled:text-mauve-200"
-            >
-              <option value="">
-                Select a product
-              </option>
+            <div className="relative">
+              <button
+                id="sale-product"
+                type="button"
+                onClick={() => setIsProductDropdownOpen((open) => !open)}
+                onKeyDown={handleProductKeyDown}
+                disabled={saving || availableProducts.length === 0}
+                aria-haspopup="listbox"
+                aria-expanded={isProductDropdownOpen}
+                className="flex h-14 w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-mauve-600 bg-olive-100 px-4 text-left text-base text-mauve-500 outline-none transition focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {selectedProduct ? (
+                  <span className="flex min-w-0 items-center gap-3">
+                    {selectedProduct.image_url ? (
+                      <img
+                        src={selectedProduct.image_url}
+                        alt={selectedProduct.name}
+                        className="h-10 w-10 shrink-0 rounded-md border border-olive-100 bg-olive-50 object-cover"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-olive-200 text-[10px] text-mauve-400">
+                       
+                      </span>
+                    )}
+                    <span className="min-w-0 truncate">
+                      {selectedProduct.name} — {getCategoryName(selectedProduct.category_id)} — {selectedProduct.stock_quantity} in stock
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-mauve-400">Select a product</span>
+                )}
+                <svg className={`h-4 w-4 shrink-0 transition-transform ${isProductDropdownOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" />
+                </svg>
+              </button>
 
-              {availableProducts.map((product) => (
-                <option
-                  key={product.id}
-                  value={product.id}
+              {isProductDropdownOpen && (
+                <div
+                  role="listbox"
+                  aria-label="Select a product"
+                  className="absolute left-0 right-0 top-full z-50 mt-1 max-h-44 space-y-1 overflow-y-auto rounded-xl border border-mauve-200 bg-olive-50 p-2 shadow-lg"
                 >
-                  {product.name} — {product.stock_quantity} in stock
-                </option>
-              ))}
-            </select>
+                  {availableProducts.map((product) => {
+                    const isSelected = selectedProductId === product.id;
 
-            {selectedProduct && (
-              <p className="mt-2 text-sm text-teal-900">
-                Available stock: {selectedProduct.stock_quantity}
-              </p>
-            )}
+                    return (
+                      <button
+                        key={product.id}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => {
+                          setSelectedProductId(product.id);
+                          setIsProductDropdownOpen(false);
+                          setValidationError("");
+                        }}
+                        disabled={saving}
+                        className={`flex w-full min-w-0 items-center gap-3 rounded-lg border p-2 text-left transition  disabled:cursor-not-allowed disabled:opacity-50 ${
+                          isSelected
+                            ? "border-olive-200 bg-olive-200"
+                            : "border-transparent hover:border-olive-100 hover:bg-olive-100"
+                        }`}
+                      >
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="h-10 w-10 shrink-0 rounded-md border border-olive-100 bg-olive-50 object-cover"
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-olive-100 text-[10px] text-mauve-400">
+                            
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="break-words font-medium text-mauve-600">{product.name}</p>
+                          <p className="text-xs text-mauve-400">{getCategoryName(product.category_id)}</p>
+                          <p className="text-xs font-medium text-teal-900">
+                            {Number(product.price).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                          </p>
+                          <p className="text-[11px] text-mauve-400">{product.stock_quantity} in stock</p>
+                        </div>
+                        {isSelected && (
+                          <span className="shrink-0 text-sm font-semibold text-mauve-600">Selected</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+        
           </div>
 
           {/* Quantity */}
@@ -314,7 +395,7 @@ function SaleForm({
               onKeyDown={handleQuantityKeyDown}
               disabled={saving || !selectedProductId}
               placeholder="Enter quantity"
-              className="h-14 w-full rounded-xl border border-mauve-600 bg-olive-100 px-4 text-base text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-olive-200 disabled:text-mauve-200"
+              className="h-14 w-full rounded-xl border border-mauve-600 bg-olive-100 px-4 text-base text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 disabled:cursor-not-allowed disabled:bg-olive-200 disabled:border-mauve-400 disabled:text-mauve-200"
             />
 
             <p className="mt-2 text-sm text-mauve-400">
@@ -324,12 +405,14 @@ function SaleForm({
         </div>
 
         {/* Add product */}
-        <div className="mt-4 flex justify-start">
+        <div className="mt-1 flex justify-start">
           <button
             type="button"
             onClick={handleAddItem}
             disabled={
-              saving || availableProducts.length === 0
+              saving ||
+              availableProducts.length === 0 ||
+              !selectedProductId
             }
             className="inline-flex min-h-11 items-center justify-center rounded-xl border border-mauve-600 bg-mauve-600 px-5 py-2 text-base font-semibold text-olive-50 transition hover:bg-mauve-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -353,16 +436,38 @@ function SaleForm({
                     key={item.productId}
                     className="grid grid-cols-1 items-center gap-3 rounded-xl border border-olive-100 bg-olive-100 p-4 sm:grid-cols-[minmax(0,1fr)_110px_auto_auto]"
                   >
-                    <div className="min-w-0">
-                      <p className="break-words font-medium text-mauve-600">
-                        {product.name}
-                      </p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="h-14 w-14 shrink-0 rounded-lg border border-olive-200 bg-white object-cover"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-olive-200 text-xs text-mauve-400">
+                         
+                        </div>
+                      )}
 
-                      <p className="mt-1 text-sm text-teal-900">
-                        {Number(product.price).toLocaleString("en-EG", {
-                          maximumFractionDigits: 2,
-                        })} EGP per item
-                      </p>
+                      <div className="min-w-0">
+                        <p className="break-words font-medium text-mauve-600">
+                          {product.name}
+                        </p>
+
+                        <p className="mt-1 text-sm text-mauve-400">
+                          {getCategoryName(product.category_id)}
+                        </p>
+
+                        <p className="mt-1 text-sm text-teal-900">
+                          {Number(product.price).toLocaleString("en-EG", {
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          EGP per item
+                        </p>
+                      </div>
                     </div>
 
                     <div>
@@ -399,9 +504,11 @@ function SaleForm({
                       </p>
 
                       <p className="font-semibold text-mauve-600">
-                        {(Number(product.price) * item.quantity).toLocaleString("en-EG", {
-                          maximumFractionDigits: 2,
-                        })} EGP
+                        {(Number(product.price) * item.quantity).toLocaleString(
+                          "en-EG",
+                          { maximumFractionDigits: 2 },
+                        )}{" "}
+                        EGP
                       </p>
                     </div>
 
@@ -428,7 +535,8 @@ function SaleForm({
               <p className="text-xl font-bold text-mauve-600">
                 {totalAmount.toLocaleString("en-EG", {
                   maximumFractionDigits: 2,
-                })} EGP
+                })}{" "}
+                EGP
               </p>
             </div>
           </div>

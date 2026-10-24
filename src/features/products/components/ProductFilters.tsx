@@ -16,7 +16,12 @@ type ProductFiltersProps<T extends FilterableItem> = {
   onSearchChange: (value: string) => void;
   onStatusChange: (value: FilterStatus) => void;
   onCategoryChange: (value: string) => void;
-  filteredCount: number;
+  statusCounts?: {
+    all: number;
+    in_stock: number;
+    low_stock: number;
+    out_of_stock: number;
+  };
   onClearFilters: () => void;
 };
 
@@ -29,7 +34,7 @@ export default function ProductFilters<T extends FilterableItem>({
   onSearchChange,
   onStatusChange,
   onCategoryChange,
-
+  statusCounts,
   onClearFilters,
 }: ProductFiltersProps<T>) {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
@@ -68,25 +73,25 @@ export default function ProductFilters<T extends FilterableItem>({
     {
       value: "all",
       label: "All",
-      count: products.length,
+      count: statusCounts?.all ?? products.length,
       activeClass: "bg-mauve-600 text-olive-50",
     },
     {
       value: "in_stock",
       label: "In Stock",
-      count: counts.in_stock,
+      count: statusCounts?.in_stock ?? counts.in_stock,
       activeClass: "bg-teal-900 text-olive-50",
     },
     {
       value: "low_stock",
       label: "Low Stock",
-      count: counts.low_stock,
-      activeClass: "bg-amber-300 text-olive-50",
+      count: statusCounts?.low_stock ?? counts.low_stock,
+      activeClass: "bg-yellow-300 text-olive-50",
     },
     {
       value: "out_of_stock",
       label: "Out of Stock",
-      count: counts.out_of_stock,
+      count: statusCounts?.out_of_stock ?? counts.out_of_stock,
       activeClass: "bg-red-700 text-olive-50",
     },
   ];
@@ -119,7 +124,7 @@ export default function ProductFilters<T extends FilterableItem>({
             value={localSearchTerm}
             onChange={(event) => setLocalSearchTerm(event.target.value)}
             placeholder="Name or description..."
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-sm outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 placeholder:text-mauve-300"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 text-mauve-500 bg-olive-100 px-3 py-2.5 text-sm outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 placeholder:text-mauve-300"
           />
         </div>
 
@@ -163,7 +168,7 @@ export default function ProductFilters<T extends FilterableItem>({
                 type="button"
                 aria-pressed={active}
                 onClick={() => onStatusChange(filter.value)}
-                className={`min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none  ${
+                className={`min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none ${
                   active
                     ? filter.activeClass
                     : "border border-olive-200 bg-olive-200 text-mauve-600 hover:bg-olive-300"
@@ -177,8 +182,6 @@ export default function ProductFilters<T extends FilterableItem>({
       </div>
 
       <div className="flex w-full flex-wrap items-center justify-between gap-2">
-       
-
         {hasActiveFilters && (
           <button
             type="button"

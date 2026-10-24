@@ -21,6 +21,91 @@ export type InventoryPageResult = {
   page: number;
 };
 
+export type InventoryStatusCounts = {
+  all: number;
+  in_stock: number;
+  low_stock: number;
+  out_of_stock: number;
+};
+
+export async function getInventoryItemById(
+  productId: string,
+): Promise<InventoryItem> {
+  if (!productId.trim()) {
+    throw new Error("A valid product ID is required.");
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .single();
+
+  if (error) {
+    console.error("Get inventory item by ID error:", error);
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("The requested product was not found.");
+  }
+
+  return data as InventoryItem;
+}
+
+export async function getInventoryStatusCounts(
+  filters: InventoryFilters = {},
+): Promise<InventoryStatusCounts> {
+  const {
+    searchTerm = "",
+    categoryFilter = "all",
+  } = filters;
+
+  const search = searchTerm.trim() || null;
+  const categoryId =
+    categoryFilter === "all" ? null : categoryFilter;
+
+  const statuses = [
+    "all",
+    "in_stock",
+    "low_stock",
+    "out_of_stock",
+  ] as const;
+
+  const results = await Promise.all(
+    statuses.map(async (status) => {
+      const { data, error } = await supabase.rpc(
+        "get_inventory_count",
+        {
+          p_search: search,
+          p_category_id: categoryId,
+          p_status: status,
+        },
+      );
+
+      if (error) {
+        console.error(
+          `Inventory ${status} count error:`,
+          error,
+        );
+        throw error;
+      }
+
+      const count = Number(data ?? 0);
+
+      if (!Number.isSafeInteger(count) || count < 0) {
+        throw new Error(
+          `The inventory ${status} count returned an invalid value.`,
+        );
+      }
+
+      return [status, count] as const;
+    }),
+  );
+
+  return Object.fromEntries(results) as InventoryStatusCounts;
+}
+
 export async function getInventoryItems(
   filters: InventoryFilters = {},
 ): Promise<InventoryPageResult> {

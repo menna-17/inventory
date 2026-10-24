@@ -8,6 +8,9 @@ import {
 import { getProducts } from "../../products/services/productService";
 import type { Product } from "../../products/types/product";
 
+import { getCategories } from "../../categories/services/categoryService";
+import type { Category } from "../../categories/types/category";
+
 import {
   createSale,
   getSales,
@@ -21,13 +24,15 @@ import type {
 async function fetchSalesData(): Promise<{
   sales: Sale[];
   products: Product[];
+  categories: Category[];
 }> {
-  const [sales, products] = await Promise.all([
+  const [sales, products, categories] = await Promise.all([
     getSales(),
     getProducts(),
+    getCategories(),
   ]);
 
-  return { sales, products };
+  return { sales, products, categories };
 }
 
 function getErrorMessage(
@@ -42,6 +47,7 @@ function getErrorMessage(
 export function useSales() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +61,7 @@ export function useSales() {
 
     setSales(data.sales);
     setProducts(data.products);
+    setCategories(data.categories);
   }, []);
 
   /*
@@ -71,6 +78,7 @@ export function useSales() {
 
         setSales(data.sales);
         setProducts(data.products);
+        setCategories(data.categories);
         setError(null);
       } catch (error) {
         if (cancelled) return;
@@ -227,6 +235,7 @@ export function useSales() {
   return {
     sales,
     products,
+    categories,
     loading,
     saving,
     error,

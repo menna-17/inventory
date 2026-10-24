@@ -95,7 +95,7 @@ function SalesHistory({
 
           {sales.length > 0 && (
             <span className="shrink-0 rounded-full bg-mauve-600 px-3 py-1 text-xs font-semibold text-olive-50">
-              {sales.length} {sales.length === 1 ? "sale" : "sales"}
+              {sales.length} {sales.length === 1 ? "sale" : "sales"} on this page
             </span>
           )}
         </div>

@@ -116,13 +116,15 @@ function ProductForm({
     const description = formValues.description.trim();
     const imageUrl = formValues.image_url.trim();
 
-    if (!name) {
-      nextErrors.name = "Product name is required.";
-    } else if (name.length < 3 || name.length > 25) {
-      nextErrors.name =
-        "Product name must be between 3 and 25 characters.";
-    }
-
+ if (!name) {
+  nextErrors.name = "Product name is required.";
+} else if (!/^[a-zA-Z]+$/.test(name)) {
+  nextErrors.name =
+    "Product name can contain English letters only (A-Z, a-z).";
+} else if (name.length < 3 || name.length > 25) {
+  nextErrors.name =
+    "Product name must be between 3 and 25 characters.";
+}
     if (!categoryId) {
       nextErrors.category_id = "Category is required.";
     } else if (
@@ -167,14 +169,16 @@ function ProductForm({
       nextErrors.minimum_stock =
         "Minimum stock must be a whole number between 2 and 20.";
     }
-
-    if (description.length > 0 && description.length < 15) {
-      nextErrors.description =
-        "Description must be at least 15 characters.";
-    } else if (description.length > 100) {
-      nextErrors.description =
-        "Description must be 100 characters or less.";
-    }
+if (description.length > 0 && !/^[a-zA-Z -]+$/.test(description)) {
+  nextErrors.description =
+    "Description can contain English letters, spaces, and hyphens (-) only.";
+} else if (description.length > 0 && description.length < 15) {
+  nextErrors.description =
+    "Description must be at least 15 characters.";
+} else if (description.length > 100) {
+  nextErrors.description =
+    "Description must be 100 characters or less.";
+}
 
     if (imageUrl) {
       try {

@@ -146,7 +146,7 @@ function LowStockSection({
                     Minimum Stock
                   </th>
 
-                  <th className="whitespace-nowrap px-5 py-3 font-semibold text-teal-900">
+                  <th className="whitespace-nowrap px-5 py-3 text-center font-semibold text-teal-900">
                     Status
                   </th>
 
@@ -176,7 +176,7 @@ function LowStockSection({
                       {product.minimum_stock}
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4">
+                    <td className="whitespace-nowrap px-5 py-4 text-center">
                       <span className="inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
                         Low stock
                       </span>

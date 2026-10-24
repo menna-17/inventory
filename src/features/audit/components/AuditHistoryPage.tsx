@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../../../lib/supabase";
 import type { AuditLog } from "../types/auditTypes";
@@ -10,8 +11,6 @@ type AuditHistoryRow = AuditLog & {
 };
 
 type AuditItemDetails = Record<string, unknown>;
-
-const PAGE_SIZE = 10;
 
 function formatAction(action: string): string {
   return action
@@ -82,10 +81,19 @@ function getActionStyle(action: string): string {
 }
 
 function AuditHistoryPage() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState<AuditHistoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const page = Number(params.get("page"));
+
+    return Number.isInteger(page) && page > 0 ? page : 1;
+  });
 
   const [selectedDate, setSelectedDate] = useState(
     () => new URLSearchParams(window.location.search).get("date") ?? "",
@@ -97,25 +105,16 @@ function AuditHistoryPage() {
     () => new URLSearchParams(window.location.search).get("activity") ?? "all",
   );
   
-  const [page, setPage] = useState(() => {
-    const pageParam = Number(
-      new URLSearchParams(window.location.search).get("page"),
-    );
-    return Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
-  });
 
-  const auditHistoryRef = useRef<HTMLElement>(null);
-
-  // Restore pagination and filters when the user navigates with browser Back/Forward
+  // Restore filters when the user navigates with browser Back/Forward
   useEffect(() => {
     function handlePopState() {
       const params = new URLSearchParams(window.location.search);
-      const pageParam = Number(params.get("page"));
-
       setSelectedDate(params.get("date") ?? "");
       setSelectedUser(params.get("user") ?? "");
       setSelectedActivity(params.get("activity") ?? "all");
-      setPage(Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1);
+      const page = Number(params.get("page"));
+      setCurrentPage(Number.isInteger(page) && page > 0 ? page : 1);
     }
 
     window.addEventListener("popstate", handlePopState);
@@ -169,10 +168,10 @@ function AuditHistoryPage() {
   }
 
   function handleClearFilters() {
+    setCurrentPage(1);
     setSelectedDate("");
     setSelectedUser("");
     setSelectedActivity("all");
-    setPage(1);
 
     const url = new URL(window.location.href);
     url.searchParams.delete("date");
@@ -183,8 +182,8 @@ function AuditHistoryPage() {
   }
 
   function handleDateChange(date: string) {
+    setCurrentPage(1);
     setSelectedDate(date);
-    setPage(1);
 
     const url = new URL(window.location.href);
     if (date) {
@@ -197,8 +196,8 @@ function AuditHistoryPage() {
   }
 
   function handleUserChange(user: string) {
+    setCurrentPage(1);
     setSelectedUser(user);
-    setPage(1);
 
     const url = new URL(window.location.href);
     if (user) {
@@ -211,8 +210,8 @@ function AuditHistoryPage() {
   }
 
   function handleActivityChange(activity: string) {
+    setCurrentPage(1);
     setSelectedActivity(activity);
-    setPage(1);
 
     const url = new URL(window.location.href);
     if (activity !== "all") {
@@ -224,22 +223,6 @@ function AuditHistoryPage() {
     window.history.replaceState(window.history.state, "", url);
   }
 
-  function handlePageChange(nextPage: number) {
-    setPage(nextPage);
-
-    const url = new URL(window.location.href);
-    if (nextPage > 1) {
-      url.searchParams.set("page", String(nextPage));
-    } else {
-      url.searchParams.delete("page");
-    }
-    window.history.replaceState(window.history.state, "", url);
-
-    auditHistoryRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
 
   const filteredLogs = logs.filter((log) => {
     const matchesDate =
@@ -259,20 +242,41 @@ function AuditHistoryPage() {
     return matchesDate && matchesUser && matchesActivity;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
+  const totalCount = filteredLogs.length;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const safePage = Math.min(currentPage, Math.max(1, totalPages));
+  const paginatedLogs = filteredLogs.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
 
-  // Ensure currentPage never exceeds totalPages after filtering changes
-  const currentPage = Math.max(1, Math.min(page, totalPages));
+  function handlePageChange(page: number) {
+    const nextPage = Math.max(1, Math.min(page, totalPages));
 
-  const paginatedLogs = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredLogs.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredLogs, currentPage]);
+    setCurrentPage(nextPage);
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (nextPage === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(nextPage));
+    }
+
+     navigate(
+      {
+        pathname: window.location.pathname,
+        search: params.toString() ? `?${params.toString()}` : "",
+      },
+      { replace: false },
+    );
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   return (
     <section
-      ref={auditHistoryRef}
-      className="min-w-0 space-y-6 scroll-mt-4"
+      className="min-w-0 space-y-6"
     >
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -726,21 +730,18 @@ function AuditHistoryPage() {
 
             <div className="border-t border-olive-200 bg-olive-200 px-5 py-3">
               <p className="text-xs text-teal-900">
-                Showing {paginatedLogs.length} of {filteredLogs.length} filtered records, from {logs.length} loaded records, up to 200.
+                Showing {filteredLogs.length} filtered records, from {logs.length} loaded records, up to 200.
               </p>
             </div>
           </div>
 
-          {/* Pagination is outside the table container */}
-          <div className=" pt-2">
-            <Pagination
-              page={currentPage}
-              totalPages={totalPages}
-              totalCount={filteredLogs.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={handlePageChange}
-            />
-          </div>
+          <Pagination
+            page={safePage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={PAGE_SIZE}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </section>

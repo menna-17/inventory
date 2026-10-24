@@ -23,7 +23,7 @@ function getStockStatus(
   if (stockQuantity <= minimumStock) {
     return {
       label: "Low Stock",
-      className: "bg-amber-300 text-amber-100",
+      className: "bg-yellow-100 text-yellow-600",
     };
   }
 
@@ -49,7 +49,6 @@ function ProductThumbnail({
         aria-label={`No image available for ${productName}`}
         title="No image available"
       >
-        {productName.slice(0, 1).toUpperCase() || "?"}
       </div>
     );
   }
@@ -129,9 +128,17 @@ function InventoryTable({
                     productName={item.name}
                   />
 
-                  <h3 className="min-w-0 break-words font-semibold text-mauve-600">
-                    {item.name}
-                  </h3>
+                  <div className="min-w-0">
+                    <h3 className="break-words font-semibold text-mauve-600">
+                      {item.name}
+                    </h3>
+
+                    {item.description && (
+                      <p className="mt-1 break-words text-sm font-normal text-teal-900">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <span
@@ -223,9 +230,17 @@ function InventoryTable({
                         productName={item.name}
                       />
 
-                      <span className="break-words">
-                        {item.name}
-                      </span>
+                      <div className="min-w-0">
+                        <span className="break-words">
+                          {item.name}
+                        </span>
+
+                        {item.description && (
+                          <p className="mt-1 break-words text-sm font-normal text-mauve-600">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </td>
 
