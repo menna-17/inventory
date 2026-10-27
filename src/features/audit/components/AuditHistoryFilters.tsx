@@ -63,7 +63,7 @@ export default function AuditHistoryFilters({
             {!selectedDate && (
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-mauve-400"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-mauve-300"
               >
                 mm/dd/yyyy
               </span>
@@ -79,7 +79,11 @@ export default function AuditHistoryFilters({
                   event.currentTarget.showPicker();
                 }
               }}
-              className={controlClassName}
+              className={`${controlClassName} ${
+                !selectedDate
+                  ? "[&::-webkit-datetime-edit]:text-transparent"
+                  : ""
+              }`}
             />
           </div>
         </div>
