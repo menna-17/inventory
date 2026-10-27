@@ -58,18 +58,30 @@ export default function AuditHistoryFilters({
           >
             Date
           </label>
-          <input
-            id="audit-date-filter"
-            type="date"
-            value={selectedDate}
-            onChange={(event) => onDateChange(event.target.value)}
-            onClick={(event) => {
-              if ("showPicker" in HTMLInputElement.prototype) {
-                event.currentTarget.showPicker();
-              }
-            }}
-            className={controlClassName}
-          />
+
+          <div className="relative min-w-0">
+            {!selectedDate && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-mauve-400"
+              >
+                mm/dd/yyyy
+              </span>
+            )}
+
+            <input
+              id="audit-date-filter"
+              type="date"
+              value={selectedDate}
+              onChange={(event) => onDateChange(event.target.value)}
+              onClick={(event) => {
+                if ("showPicker" in HTMLInputElement.prototype) {
+                  event.currentTarget.showPicker();
+                }
+              }}
+              className={controlClassName}
+            />
+          </div>
         </div>
 
         <div className="min-w-0">

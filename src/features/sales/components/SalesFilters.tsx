@@ -67,20 +67,31 @@ function SalesFilters({
             Search by date
           </label>
 
-          <input
-            id="sales-date-search"
-            type="date"
-            value={selectedDate}
-            onChange={(event) => onDateChange?.(event.target.value)}
-            onClick={(event) => {
-              const input = event.currentTarget;
+          <div className="relative min-w-0">
+            {!selectedDate && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-mauve-400"
+              >
+                mm/dd/yyyy
+              </span>
+            )}
 
-              if ("showPicker" in HTMLInputElement.prototype) {
-                input.showPicker();
-              }
-            }}
-           className="mt-1 block min-h-11 w-full min-w-0 max-w-full box-border appearance-none cursor-pointer rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
-          />
+            <input
+              id="sales-date-search"
+              type="date"
+              value={selectedDate}
+              onChange={(event) => onDateChange?.(event.target.value)}
+              onClick={(event) => {
+                const input = event.currentTarget;
+
+                if ("showPicker" in HTMLInputElement.prototype) {
+                  input.showPicker();
+                }
+              }}
+              className="mt-1 block min-h-11 w-full min-w-0 max-w-full box-border appearance-none cursor-pointer rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            />
+          </div>
         </div>
       </div>
 
