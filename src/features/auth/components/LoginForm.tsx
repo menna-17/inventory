@@ -95,7 +95,7 @@ function LoginForm() {
             errorMessage ? "login-error" : undefined
           }
           disabled={isSubmitting}
-          className="min-h-11 w-full rounded-lg border border-mauve-600 px-3 py-2 text-base outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-600 disabled:cursor-not-allowed disabled:bg-olive-50"
+          className="min-h-11 w-full rounded-lg border border-mauve-600 px-3 py-2 text-base text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-600 disabled:cursor-not-allowed disabled:bg-olive-50"
         />
       </div>
 
@@ -120,7 +120,7 @@ function LoginForm() {
             errorMessage ? "login-error" : undefined
           }
           disabled={isSubmitting}
-          className="min-h-11 w-full rounded-lg border border-mauve-600 px-3 py-2 text-base outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-600 disabled:cursor-not-allowed disabled:bg-olive-50"
+          className="min-h-11 w-full rounded-lg border border-mauve-600 px-3 py-2 text-base text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-600 disabled:cursor-not-allowed disabled:bg-olive-50"
         />
       </div>
 
