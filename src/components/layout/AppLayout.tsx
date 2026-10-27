@@ -103,6 +103,14 @@ function AppLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  }, [location.pathname]);
+
+  useEffect(() => {
     if (!mobileMenuOpen) return;
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -342,7 +350,7 @@ function AppLayout() {
               ref={mobileMenuRef}
               id="mobile-navigation"
               aria-label="Mobile navigation"
-              className="absolute inset-y-0 left-0 z-40 w-72 max-w-[85vw] overflow-y-auto border-r border-teal-900 bg-teal-900 p-4 shadow-xl md:hidden"
+              className="fixed bottom-0 left-0 top-16 z-40 w-72 max-w-[85vw] overflow-y-auto border-r border-teal-900 bg-teal-900 p-4 shadow-xl md:hidden"
             >
               {navigation}
             </aside>
