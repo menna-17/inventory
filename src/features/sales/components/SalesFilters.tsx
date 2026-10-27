@@ -53,7 +53,7 @@ function SalesFilters({
                 onEmployeeSearchChange?.(event.target.value)
               }
               placeholder="Enter employee name..."
-              className="mt-1 block min-h-11 w-full min-w-0 max-w-full box-border rounded-lg border border-mauve-500 bg-olive-100 py-2 pl-10 pr-3 text-sm text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+              className="mt-1 block min-h-11 w-full min-w-0 max-w-full box-border rounded-lg border border-mauve-500 bg-olive-100 py-2 pl-10 pr-3 text-base text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
             />
           </div>
         </div>
