@@ -146,7 +146,7 @@ function SalesHistory({
       ) : (
         <div className="min-w-0 rounded-xl border border-olive-100 bg-olive-100 shadow-sm">
           {/* Mobile cards */}
-          <div className="flex min-w-0 flex-col divide-y divide-olive-200 py-2 md:hidden">
+          <div className="flex min-w-0 flex-col divide-y divide-olive-300 py-2 md:hidden">
             {sales.map((sale) => (
               <article
                 key={sale.id}

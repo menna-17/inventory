@@ -32,7 +32,7 @@ function SalesFilters({
             Search by employee name
           </label>
 
-          <div className="relative">
+          <div className="relative min-w-0">
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
@@ -53,7 +53,7 @@ function SalesFilters({
                 onEmployeeSearchChange?.(event.target.value)
               }
               placeholder="Enter employee name..."
-              className="min-h-11 w-full rounded-lg border border-mauve-500 bg-olive-100 py-2 pl-10 pr-3 text-sm text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+              className="mt-1 block min-h-11 w-full min-w-0 max-w-full box-border rounded-lg border border-mauve-500 bg-olive-100 py-2 pl-10 pr-3 text-sm text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
             />
           </div>
         </div>
@@ -79,7 +79,7 @@ function SalesFilters({
                 input.showPicker();
               }
             }}
-            className="min-h-11 w-full cursor-pointer rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="mt-1 block min-h-11 w-full min-w-0 max-w-full box-border cursor-pointer rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           />
         </div>
       </div>

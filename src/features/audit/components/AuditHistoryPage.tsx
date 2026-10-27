@@ -386,7 +386,7 @@ function AuditHistoryPage() {
         <>
           <div className="overflow-hidden rounded-xl border border-olive-100 bg-olive-100 shadow-sm">
             {/* Mobile layout */}
-            <div className="divide-y divide-olive-200 sm:hidden">
+            <div className="divide-y divide-olive-300 sm:hidden">
               {paginatedLogs.map((log) => {
                 const details: AuditItemDetails = log.details ?? {};
 
