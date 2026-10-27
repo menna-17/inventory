@@ -363,7 +363,7 @@ function CategoriesPage() {
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search category name..."
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-base text-mauve-600 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-base text-mauve-500 outline-none transition placeholder:text-mauve-300 focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           />
         </div>
       )}

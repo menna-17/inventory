@@ -124,7 +124,7 @@ export default function ProductFilters<T extends FilterableItem>({
             value={localSearchTerm}
             onChange={(event) => setLocalSearchTerm(event.target.value)}
             placeholder="Name or description..."
-            className="min-h-11 w-full rounded-lg border border-mauve-600 text-mauve-500 bg-olive-100 px-3 py-2.5 text-base outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 placeholder:text-mauve-300"
+            className="h-11 w-full box-border rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-base text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200 placeholder:text-mauve-300"
           />
         </div>
 
@@ -140,7 +140,7 @@ export default function ProductFilters<T extends FilterableItem>({
             id="category-filter"
             value={categoryFilter}
             onChange={(event) => onCategoryChange(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-sm text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
+            className="h-11 w-full box-border rounded-lg border border-mauve-600 bg-olive-100 px-3 py-2.5 text-base text-mauve-500 outline-none transition focus:border-mauve-600 focus:ring-2 focus:ring-mauve-200"
           >
             <option value="all">All Categories</option>
 
