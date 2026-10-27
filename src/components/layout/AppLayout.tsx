@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useRef,
@@ -116,14 +117,6 @@ function AppLayout() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mobileMenuOpen]);
-
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      mobileMenuRef.current
-        ?.querySelector<HTMLAnchorElement>("a")
-        ?.focus();
-    }
   }, [mobileMenuOpen]);
 
   async function handleSignOut() {
