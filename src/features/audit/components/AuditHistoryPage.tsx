@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../../../lib/supabase";
@@ -86,6 +86,7 @@ function AuditHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const shouldScrollAfterPageChange = useRef(false);
 
   const PAGE_SIZE = 10;
   const [currentPage, setCurrentPage] = useState(() => {
@@ -105,6 +106,14 @@ function AuditHistoryPage() {
     () => new URLSearchParams(window.location.search).get("activity") ?? "all",
   );
   
+
+  useLayoutEffect(() => {
+    if (!shouldScrollAfterPageChange.current) return;
+
+    shouldScrollAfterPageChange.current = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
+
 
   // Restore filters when the user navigates with browser Back/Forward
   useEffect(() => {
@@ -253,6 +262,7 @@ function AuditHistoryPage() {
   function handlePageChange(page: number) {
     const nextPage = Math.max(1, Math.min(page, totalPages));
 
+    shouldScrollAfterPageChange.current = nextPage !== currentPage;
     setCurrentPage(nextPage);
 
     const params = new URLSearchParams(window.location.search);
@@ -271,7 +281,6 @@ function AuditHistoryPage() {
       { replace: false },
     );
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (

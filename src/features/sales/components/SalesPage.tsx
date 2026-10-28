@@ -1,5 +1,4 @@
-
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import SaleForm from "./SaleForm";
@@ -26,6 +25,7 @@ const {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const salesHistoryRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(false);
 
   const parsedPage = Number(searchParams.get("page"));
   const page =
@@ -90,6 +90,17 @@ const {
     Math.min(page, Math.max(1, totalPages)),
   );
 
+  useLayoutEffect(() => {
+    if (!shouldScrollRef.current) return;
+
+    shouldScrollRef.current = false;
+
+    salesHistoryRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [currentPage]);
+
   async function handleCreateSale(
     items: CreateSaleItemInput[],
   ) {
@@ -103,17 +114,12 @@ const {
       return;
     }
 
+    shouldScrollRef.current = true;
+
     updateUrlState(
       { page: String(nextPage) },
       false,
     );
-
-    requestAnimationFrame(() => {
-      salesHistoryRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
   }
 
   function handleEmployeeSearchChange(value: string) {
