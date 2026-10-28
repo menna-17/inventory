@@ -98,23 +98,23 @@ const {
     });
   }
 
-  function handlePageChange(nextPage: number) {
-    if (nextPage < 1 || nextPage > totalPages) {
-      return;
-    }
-
-    updateUrlState(
-      { page: String(nextPage) },
-      false,
-    );
-
-    requestAnimationFrame(() => {
-      salesHistoryRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
+function handlePageChange(nextPage: number) {
+  if (nextPage < 1 || nextPage > totalPages) {
+    return;
   }
+
+  updateUrlState(
+    { page: String(nextPage) },
+    false,
+  );
+
+  requestAnimationFrame(() => {
+    salesHistoryRef.current?.scrollIntoView({
+      behavior: "auto",
+      block: "start",
+    });
+  });
+}
 
   function handleEmployeeSearchChange(value: string) {
     updateUrlState({
